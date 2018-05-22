@@ -1,0 +1,41 @@
+#!/Users/drrt/jupyter/miniconda3/bin/python
+"""Gazebo Dev Tool.
+
+Usage:
+	gzdev.py spawn (<gzv> | --gzv=<number>)
+		       [<ros> | --ros=<distro_name>]
+		       [<config> | --config=<file_name>]
+		       [<pr> | --pr=<number>]
+	gzdev.py -h | --help
+	gzdev.py --version
+
+Options:
+	-h --help               Show this screen.
+	--version               Show gzdev's version.
+	--gzv=<number>          Gazebo version number.
+	--ros=<distro_name>     ROS distribution name.
+	--config=<file_name>    Gazebo world configuration file.
+	--pr=<number>           Gazebo branch to compile from based on Pull Request #.
+
+"""
+from docopt import docopt
+
+if __name__ == '__main__':
+	args = docopt(__doc__, version='Gazebo Dev Tool 0.1')
+	gzv = args["<gzv>"] if args["<gzv>"] else args["--gzv"]
+	ros = args["<ros>"] if args["<ros>"] else args["--ros"]
+	config = args["<config>"] if args["<config>"] else args["--config"]
+	pr = args["<pr>"] if args["<pr>"] else args["--pr"]
+
+	ros_msg, config_msg, pr_msg = ("", "", "")
+
+	if (gzv):
+		gz_msg = "Spawning docker container for Gazebo %s" % gzv
+	if (ros):
+		ros_msg = " + ROS %s" % ros
+	if (config):
+		config_msg = " running world configuration %s" % config
+	if (pr):
+		pr_msg = " from PR #%s" % pr
+
+	print(gz_msg + ros_msg + config_msg + pr_msg + ".\n")
