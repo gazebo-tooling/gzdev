@@ -1,4 +1,4 @@
-#!/Users/drrt/jupyter/miniconda3/bin/python
+#!/srv/conda/bin/python
 """Gazebo Dev Tool.
 
 Usage:
