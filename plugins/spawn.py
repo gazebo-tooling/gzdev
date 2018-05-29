@@ -43,7 +43,8 @@ if (ros):
 
 		if tmp != None and tmp != gzv:
 			print("\nUnofficial Gazebo %s%s version selected!" % (tmp, ros_msg),
-			"If you know what you are doing add option --y to confirm selection and continue.\n",
+				"We recommend using Gazebo %s%s :)\n\n" % (gzv, ros_msg),
+			"*If you know what you are doing add option --y to confirm selection and continue.\n",
 			"*Otherwise, please visit http://gazebosim.org/tutorials?tut=ros_wrapper_versions for more info.\n")
 			exit()
 
