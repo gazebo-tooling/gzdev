@@ -42,10 +42,10 @@ if (ros):
 		if ros == "indigo": gzv = "2"
 
 		if tmp != None and tmp != gzv:
-			print("\nUnofficial Gazebo %s%s version selected!" % (tmp, ros_msg),
+			print("WARNING: Unofficial Gazebo %s%s version selected!\n" % (tmp, ros_msg),
 				"We recommend using Gazebo %s%s :)\n\n" % (gzv, ros_msg),
-			"*If you know what you are doing add option --y to confirm selection and continue.\n",
-			"*Otherwise, please visit http://gazebosim.org/tutorials?tut=ros_wrapper_versions for more info.\n")
+			"    * If you know what you are doing add option --y to confirm selection and continue.\n",
+			"    * Otherwise, please visit http://gazebosim.org/tutorials?tut=ros_wrapper_versions for more info.\n", sep="")
 			exit()
 
 if (gzv):
