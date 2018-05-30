@@ -1,4 +1,3 @@
-#!/srv/conda/bin/python
 """
 Gazebo Dev Tool.
 
