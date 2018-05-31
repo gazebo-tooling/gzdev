@@ -1,6 +1,4 @@
-# gzdev-core
-
-```
+"""
 Gazebo Dev Tool.
 
 Usage:
@@ -15,4 +13,13 @@ Options:
 
 Commands/Plugins:
 	spawn          Spawn a virtual environment ready for development.
-```
+
+"""
+
+from docopt import docopt
+from importlib import import_module
+
+if __name__ == '__main__':
+	args = docopt(__doc__, version='gzdev-core 0.1', options_first=True)
+	command = args['<command>']
+	plugin = import_module("plugins." + command)
