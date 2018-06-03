@@ -9,13 +9,13 @@ Usage:
 	gzdev spawn --version
 
 Options:
-	-h --help               Show this screen.
-	--version               Show gzdev's version.
-	--gzv=<number>          Gazebo version number.
-	--ros=<distro_name>     ROS distribution name.
-	--config=<file_name>    Gazebo world configuration file.
-	--pr=<number>           Gazebo branch to compile from based on Pull Request #.
-	--yes                   Confirm selection of unofficial ROS + Gazebo version.
+	-h --help               Show this screen
+	--version               Show gzdev's version
+	--gzv=<number>          Gazebo version number
+	--ros=<distro_name>     ROS distribution name
+	--config=<file_name>    World configuration file
+	--pr=<number>           Branch to compile from based on Pull Request #
+	--yes                   Confirm selection of unofficial ROS + Gazebo version
 
 """
 from docopt import docopt
@@ -41,11 +41,26 @@ if (ros):
 		if ros == "jade": gzv = "5"
 		if ros == "indigo": gzv = "2"
 
-		if tmp != None and tmp != gzv:
-			print("WARNING: Unofficial Gazebo %s%s version selected!\n" % (tmp, ros_msg),
+		compatible = (tmp == "9" and ros == "melodic")
+		compatible = (compatible or
+						(tmp == "7" or tmp == "8" or tmp == "9") and
+						(ros == "kinetic" or ros == "lunar"))
+		compatible = compatible or (tmp == "5" and ros == "jade")
+		compatible = (compatible or
+						(tmp == "2" or tmp == "7") and ros == "indigo")
+
+		if not compatible:
+			print("Not compatible.\n")
+			exit()
+
+		elif tmp != None and tmp != gzv:
+			print(
+				"WARNING: Unofficial Gazebo %s%s version selected!\n" %
+				(tmp, ros_msg),
 				"We recommend using Gazebo %s%s :)\n\n" % (gzv, ros_msg),
-			"    * If you know what you are doing add option --y to confirm selection and continue.\n",
-			"    * Otherwise, please visit http://gazebosim.org/tutorials?tut=ros_wrapper_versions for more info.\n", sep="")
+				"    * If you know what you are doing add option --y to confirm selection and continue.\n",
+				"    * Otherwise, please visit http://gazebosim.org/tutorials?tut=ros_wrapper_versions for more info.\n",
+				sep="")
 			exit()
 
 if (gzv):
