@@ -1,5 +1,5 @@
 # gzdev-spawn
-
+[![Build Status](https://travis-ci.org/osrf/gzdev.svg?branch=dev-spawn)](https://travis-ci.org/osrf/gzdev)
 ```
 Usage:
 	gzdev spawn [<gzv> | --gzv=<number>]
