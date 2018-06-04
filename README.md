@@ -1,5 +1,5 @@
 # gzdev-core
-
+[![Build Status](https://travis-ci.org/osrf/gzdev.svg?branch=dev-core)](https://travis-ci.org/osrf/gzdev)
 ```
 Gazebo Dev Tool.
 
