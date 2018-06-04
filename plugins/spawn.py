@@ -40,8 +40,7 @@ gz9 = {}.fromkeys(["kinetic", "lunar", "melodic"])
 compatible = [None, None, gz2, None, None, gz5, None, gz7, gz8, gz9]
 
 if type(gzv) is int and (gzv <= 0 or gzv >= len(compatible)) or type(gzv) is str:
-	print("\nERROR: Please select a valid Gazebo version number no greater than %d.\n" %
-		(len(compatible)-1))
+	print("\nERROR: '%s' is not a valid Gazebo version number.\n" % gzv)
 	exit()
 
 if not compatible[gzv]:
