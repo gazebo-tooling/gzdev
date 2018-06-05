@@ -19,51 +19,57 @@ Options:
 
 """
 from docopt import docopt
+from sys import stderr
 
-args = docopt(__doc__, version="gzdev-spawn 0.1")
-
-gzv = args["<gzv>"] if args["<gzv>"] else args["--gzv"]
-ros = args["<ros>"] if args["<ros>"] else args["--ros"]
-config = args["<config>"] if args["<config>"] else args["--config"]
-pr = args["<pr>"] if args["<pr>"] else args["--pr"]
-confirm = args["--yes"]
-
-ros = ros.lower() if ros else None
-gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
-
+ros_gzv = {"melodic":9, "lunar":7, "kinetic":7, "indigo":2}
 gz2 = {}.fromkeys(["indigo"])
-gz5 = {}.fromkeys(["jade"])
 gz7 = {}.fromkeys(["indigo", "kinetic", "lunar"])
 gz8 = {}.fromkeys(["kinetic", "lunar"])
 gz9 = {}.fromkeys(["kinetic", "lunar", "melodic"])
 
-compatible = [None, None, gz2, None, None, gz5, None, gz7, gz8, gz9]
+compatible = [None, None, gz2, None, None, None, None, gz7, gz8, gz9]
 
-if type(gzv) is int and (gzv <= 0 or gzv >= len(compatible)) or type(gzv) is str:
-	print("\nERROR: '%s' is not a valid Gazebo version number.\n" % gzv)
+def parse_args():
+	args = docopt(__doc__, version="gzdev-spawn 0.1")
+
+	gzv = args["<gzv>"] if args["<gzv>"] else args["--gzv"]
+	ros = args["<ros>"] if args["<ros>"] else args["--ros"]
+	config = args["<config>"] if args["<config>"] else args["--config"]
+	pr = args["<pr>"] if args["<pr>"] else args["--pr"]
+	confirm = args["--yes"]
+
+	ros = ros.lower() if ros else None
+	gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
+
+	return gzv, ros, config, pr, confirm
+
+def error(msg):
+	print("\n" + msg + "\n", file=stderr)
 	exit()
 
-if not compatible[gzv]:
-	print("\nERROR: This tool does not support Gazebo %d.\n" % gzv)
-	exit()
+def validate_input(gzv, ros):
+	if type(gzv) is int and (gzv <= 0 or gzv >= len(compatible)) or type(gzv) is str:
+		error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
 
+	if not gzv and ros not in ros_gzv:
+		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
+
+	if gzv and not compatible[gzv]:
+		error("ERROR: This tool does not support Gazebo %d." % gzv)
+
+	if gzv and ros not in compatible[gzv]:
+		error("ERROR: Gazebo %d is not compatible with ROS %s!" % (gzv, ros))
+
+gzv, ros, config, pr, confirm = parse_args()
+validate_input(gzv, ros)
 gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
 if (ros):
-	if gzv and ros not in compatible[gzv]:
-		print("\nERROR: Gazebo %d is not compatible with ROS %s!\n" % (gzv, ros))
-		exit()
-
 	ros_msg = " + ROS %s" % ros
 
 	if not gzv or (gzv and not confirm):
 		tmp = gzv
-
-		if ros == "melodic": gzv = 9
-		if ros == "lunar": gzv = 7
-		if ros == "kinetic": gzv = 7
-		if ros == "jade": gzv = 5
-		if ros == "indigo": gzv = 2
+		gzv = ros_gzv[ros]
 
 		if tmp != None and tmp != gzv:
 			print(
