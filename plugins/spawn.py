@@ -20,13 +20,12 @@ Options:
 """
 from docopt import docopt
 
-ros_gzv = {"melodic": 9, "lunar": 7, "kinetic": 7, "indigo": 2}
-gz2 = {}.fromkeys(["indigo"])
-gz7 = {}.fromkeys(["indigo", "kinetic", "lunar"])
-gz8 = {}.fromkeys(["kinetic", "lunar"])
-gz9 = {}.fromkeys(["kinetic", "lunar", "melodic"])
-
-compatible = [None, None, gz2, None, None, None, None, gz7, gz8, gz9]
+official_ros_gzv = {"melodic": 9, "lunar": 7, "kinetic": 7, "indigo": 2}
+gz7_ros = {}.fromkeys(["indigo", "kinetic", "lunar"])
+gz8_ros = {}.fromkeys(["kinetic", "lunar"])
+gz9_ros = {}.fromkeys(["kinetic", "lunar", "melodic"])
+compatible = {7:gz7_ros, 8:gz8_ros, 9:gz9_ros}
+max_gzv = 9
 
 
 def parse_args():
@@ -49,25 +48,25 @@ def error(msg):
 	exit("\n" + msg + "\n")
 
 
-def validate_input():
-	gzv, ros, config, pr, confirm = argv
+def validate_input(args):
+	gzv, ros, config, pr, confirm = args
 
 	if type(gzv) is int and (gzv <= 0 or
-		gzv >= len(compatible)) or type(gzv) is str:
+		gzv > max_gzv) or type(gzv) is str:
 		error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
 
-	if not gzv and ros and ros not in ros_gzv:
+	if not gzv and ros and ros not in official_ros_gzv:
 		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
 
-	if gzv and not compatible[gzv]:
+	if gzv and gzv not in compatible:
 		error("ERROR: This tool does not support Gazebo %d." % gzv)
 
 	if gzv and ros and ros not in compatible[gzv]:
 		error("ERROR: Gazebo %d is not compatible with ROS %s!" % (gzv, ros))
 
 
-def run():
-	gzv, ros, config, pr, confirm = argv
+def run(args):
+	gzv, ros, config, pr, confirm = args
 	gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
 	if ros:
@@ -75,7 +74,7 @@ def run():
 
 		if gzv == None or (gzv and not confirm):
 			tmp = gzv
-			gzv = ros_gzv[ros]
+			gzv = official_ros_gzv[ros]
 
 			if tmp != None and tmp != gzv:
 				print(
@@ -104,7 +103,7 @@ def run():
 	print(gz_msg + ros_msg + config_msg + pr_msg + ".\n")
 
 
-argv = parse_args()
 if __name__ == '__main__':
-	validate_input()
-	run()
+	args = parse_args()
+	validate_input(args)
+	run(args)
