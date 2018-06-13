@@ -20,8 +20,8 @@ Options:
 """
 from docopt import docopt
 
-official_ros_gzv = {"melodic": 9, "lunar": 7, "kinetic": 7, "indigo": 2}
-gz7_ros = {}.fromkeys(["indigo", "kinetic", "lunar"])
+official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
+gz7_ros = {}.fromkeys(["kinetic", "lunar"])
 gz8_ros = {}.fromkeys(["kinetic", "lunar"])
 gz9_ros = {}.fromkeys(["kinetic", "lunar", "melodic"])
 compatible = {7:gz7_ros, 8:gz8_ros, 9:gz9_ros}
