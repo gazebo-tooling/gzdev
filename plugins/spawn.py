@@ -103,7 +103,11 @@ def run(args):
 	print(gz_msg + ros_msg + config_msg + pr_msg + ".\n")
 
 
-if __name__ == '__main__':
+def main():
 	args = parse_args()
 	validate_input(args)
 	run(args)
+
+
+if __name__ == '__main__':
+	main()
