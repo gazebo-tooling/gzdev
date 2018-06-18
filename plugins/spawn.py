@@ -4,6 +4,7 @@ Usage:
 	            [<ros> | --ros=<distro_name>]
 	            [<config> | --config=<file_name>]
 	            [<pr> | --pr=<number>]
+	            [--dev | --source]
 	            [--yes]
 	gzdev spawn -h | --help
 	gzdev spawn --version
@@ -24,13 +25,11 @@ official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
 gz7_ros = {}.fromkeys(["kinetic", "lunar"])
 gz8_ros = {}.fromkeys(["kinetic", "lunar"])
 gz9_ros = {}.fromkeys(["kinetic", "lunar", "melodic"])
-compatible = {7:gz7_ros, 8:gz8_ros, 9:gz9_ros}
+compatible = {7: gz7_ros, 8: gz8_ros, 9: gz9_ros}
 max_gzv = 9
 
 
-def parse_args():
-	args = docopt(__doc__, version="gzdev-spawn 0.1")
-
+def parse_args(args):
 	gzv = args["<gzv>"] if args["<gzv>"] else args["--gzv"]
 	ros = args["<ros>"] if args["<ros>"] else args["--ros"]
 	config = args["<config>"] if args["<config>"] else args["--config"]
@@ -39,23 +38,23 @@ def parse_args():
 
 	ros = ros.lower() if ros else None
 	gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
+	if gzv == None and ros and ros in official_ros_gzv:
+		gzv = official_ros_gzv[ros]
 
 	return gzv, ros, config, pr, confirm
 
 
 def error(msg):
-	# raise SystemExit("\n" + msg + "\n")
 	exit("\n" + msg + "\n")
 
 
 def validate_input(args):
 	gzv, ros, config, pr, confirm = args
 
-	if type(gzv) is int and (gzv <= 0 or
-		gzv > max_gzv) or type(gzv) is str:
+	if type(gzv) is int and (gzv <= 0 or gzv > max_gzv) or type(gzv) is str:
 		error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
 
-	if not gzv and ros and ros not in official_ros_gzv:
+	if ros and ros not in official_ros_gzv:
 		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
 
 	if gzv and gzv not in compatible:
@@ -63,6 +62,16 @@ def validate_input(args):
 
 	if gzv and ros and ros not in compatible[gzv]:
 		error("ERROR: Gazebo %d is not compatible with ROS %s!" % (gzv, ros))
+
+	tmp = official_ros_gzv[ros] if ros else None
+	if ros and tmp != None and tmp != gzv and not confirm:
+		error("WARNING: Unofficial Gazebo %d + ROS %s version selected!\n" %
+			(gzv, ros) + "We recommend using Gazebo %d + ROS %s :)\n\n" %
+			(tmp, ros) + "    * If you know what you are doing, " +
+			"then add option --y to confirm selection and continue.\n" +
+			"    * Otherwise, please visit"
+			"http://gazebosim.org/tutorials?tut=ros_wrapper_versions"
+			"for more info.")
 
 
 def run(args):
@@ -72,27 +81,10 @@ def run(args):
 	if ros:
 		ros_msg = " + ROS %s" % ros
 
-		if gzv == None or (gzv and not confirm):
-			tmp = gzv
-			gzv = official_ros_gzv[ros]
-
-			if tmp != None and tmp != gzv:
-				print(
-					"WARNING: Unofficial Gazebo %d%s version selected!\n" %
-					(tmp, ros_msg),
-					"We recommend using Gazebo %d%s :)\n\n" % (gzv, ros_msg),
-					"    * If you know what you are doing, ",
-					"then add option --y to confirm selection and continue.\n",
-					"    * Otherwise, please visit"
-					"http://gazebosim.org/tutorials?tut=ros_wrapper_versions"
-					"for more info.\n",
-					sep="")
-				exit()
-
 	if gzv:
-		gz_msg = "\nSpawning docker container for Gazebo %d" % gzv
+		gz_msg = "Spawning docker container for Gazebo %d" % gzv
 	else:
-		exit("\nERROR: Gazebo version was not specified.\n")
+		error("ERROR: Gazebo version was not specified.")
 
 	if config:
 		config_msg = " running world configuration %s" % config
@@ -100,11 +92,11 @@ def run(args):
 	if pr:
 		pr_msg = " from PR# %s" % pr
 
-	print(gz_msg + ros_msg + config_msg + pr_msg + ".\n")
+	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + ".\n")
 
 
 def main():
-	args = parse_args()
+	args = parse_args(docopt(__doc__, version="gzdev-spawn 0.1"))
 	validate_input(args)
 	run(args)
 
