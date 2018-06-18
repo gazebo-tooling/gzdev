@@ -16,6 +16,8 @@ Options:
 	--ros=<distro_name>     ROS distribution name
 	--config=<file_name>    World configuration file
 	--pr=<number>           Branch to compile from based on Pull Request #
+	--dev                   Install Gazebo development libraries
+	--source                Build Gazebo/ROS from source
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
 
 """
