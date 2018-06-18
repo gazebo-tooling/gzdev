@@ -31,7 +31,7 @@ compatible = {7: gz7_ros, 8: gz8_ros, 9: gz9_ros}
 max_gzv = 9
 
 
-def parse_args(args):
+def normalize_args(args):
 	gzv = args["<gzv>"] if args["<gzv>"] else args["--gzv"]
 	ros = args["<ros>"] if args["<ros>"] else args["--ros"]
 	config = args["<config>"] if args["<config>"] else args["--config"]
@@ -56,11 +56,11 @@ def validate_input(args):
 	if type(gzv) is int and (gzv <= 0 or gzv > max_gzv) or type(gzv) is str:
 		error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
 
-	if ros and ros not in official_ros_gzv:
-		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
-
 	if gzv and gzv not in compatible:
 		error("ERROR: This tool does not support Gazebo %d." % gzv)
+
+	if ros and ros not in official_ros_gzv:
+		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
 
 	if gzv and ros and ros not in compatible[gzv]:
 		error("ERROR: Gazebo %d is not compatible with ROS %s!" % (gzv, ros))
@@ -98,7 +98,7 @@ def run(args):
 
 
 def main():
-	args = parse_args(docopt(__doc__, version="gzdev-spawn 0.1"))
+	args = normalize_args(docopt(__doc__, version="gzdev-spawn 0.1.0"))
 	validate_input(args)
 	run(args)
 
