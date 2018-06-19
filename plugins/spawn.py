@@ -22,6 +22,7 @@ Options:
 
 """
 from docopt import docopt
+from sys import stderr
 
 official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
 gz7_ros = {}.fromkeys(["kinetic", "lunar"])
@@ -47,7 +48,8 @@ def normalize_args(args):
 
 
 def error(msg):
-	exit("\n" + msg + "\n")
+	print("\n" + msg + "\n", file=stderr)
+	exit(0)
 
 
 def validate_input(args):
