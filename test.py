@@ -16,6 +16,7 @@ argv = {
 run_code = {}
 error_code = {}
 
+
 def execute(argv):
 	args = spawn.normalize_args(argv)
 	spawn.validate_input(args)
@@ -42,11 +43,10 @@ def test_gzv():
 		argv["--gzv"] = v
 		execute(argv)
 
-	with raises(SystemExit):
-		execute(argv)
-		for v in bad_gzv:
-			argv["--gzv"] = v
+	for v in bad_gzv:
+		with raises(SystemExit):
 			execute(argv)
+			argv["--gzv"] = v
 
 
 def test_gz_ros():
@@ -63,15 +63,16 @@ def test_gz_ros():
 		execute(argv)
 
 	gzv = ("7", "8")
-	with raises(SystemExit):
-		for i in range(len(gzv)):
+	for i in range(len(gzv)):
+		with raises(SystemExit) as excinfo:
 			argv["--gzv"] = gzv[i]
 			argv["--ros"] = "melodic"
 			execute(argv)
+		assert excinfo.value.code == 0
 
 	ros = ("Indigo", "jade", "turtle", "!@#$")
-	with raises(SystemExit):
-		for i in range(len(ros)):
+	for i in range(len(ros)):
+		with raises(SystemExit):
 			argv["--ros"] = ros[i]
 			execute(argv)
 
@@ -80,8 +81,8 @@ def test_gz_ros_unofficial():
 	gzv = ("8", "8", "9", "9")
 	ros = ("kinetic", "lunar", "kinetic", "lunar")
 
-	with raises(SystemExit):
-		for i in range(len(gzv)):
+	for i in range(len(gzv)):
+		with raises(SystemExit):
 			argv["--gzv"] = gzv[i]
 			argv["--ros"] = ros[i]
 			execute(argv)
@@ -99,4 +100,5 @@ def run_all():
 	test_gz_ros_unofficial()
 
 
-run_all()
+if __name__ == '__main__':
+	run_all()
