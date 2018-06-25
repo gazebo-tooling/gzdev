@@ -23,6 +23,10 @@ Options:
 """
 from docopt import docopt
 from sys import stderr
+from dockerfile_parse import DockerfileParser
+from pprint import pprint
+import json
+import docker
 
 official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
 gz7_ros = {}.fromkeys(["kinetic", "lunar"])
@@ -81,12 +85,16 @@ def validate_input(args):
 def run(args):
 	gzv, ros, config, pr, confirm = args
 	gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
+	docker_build = docker.from_env().images.build
+	docker_run = docker.from_env().containers.run
 
 	if ros:
 		ros_msg = " + ROS %s" % ros
 
 	if gzv:
 		gz_msg = "Spawning docker container for Gazebo %d" % gzv
+		docker_build(path="docker", buildargs={"GZV":"9"}, tag="gz9_phusion_xenial")
+		docker_run("gz9_phusion_xenial", "xeyes", environment=["DISPLAY=192.168.99.1:0"], remove=True)
 	else:
 		error("ERROR: Gazebo version was not specified.")
 
@@ -97,6 +105,31 @@ def run(args):
 		pr_msg = " from PR# %s" % pr
 
 	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + ".\n")
+
+def docker_test():
+	dfp = DockerfileParser()
+	dfp.content = """\
+	From  base
+	LABEL foo="bar baz"
+	USER  me
+	RUN ls
+	RUN apt-get update"""
+
+	# Print the parsed structure:
+	# pprint(dfp.structure)
+	pprint(dfp.json)
+	# pprint(dfp.labels)
+
+	# Set a new base:
+	dfp.baseimage = 'centos:7'
+	parsed_json = json.loads(dfp.json)
+	parsed_json[3]["RUN"] = "echo hello"
+	print(parsed_json)
+	# dfp.json = json.dumps(parsed_json)
+	dfp._modify_instruction("FROM", "xenial:latest")
+	dfp._modify_instruction("RUN", "apt-get install mesa-utils")
+	# Print the new Dockerfile with an updated FROM line:
+	print(dfp.content)
 
 
 def main():
