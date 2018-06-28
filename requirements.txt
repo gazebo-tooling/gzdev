@@ -1,2 +1,4 @@
 docopt
 pytest
+dockerfile_parse
+docker
