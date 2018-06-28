@@ -9,17 +9,8 @@ RUN apt-get update && \
 	libgl1-mesa-glx \
 	libgl1-mesa-dri \
 	mesa-utils \
-	x11-apps
-
-# git-core pkg-config automake libtool libpthread-stubs0-dev xserver-xorg-dev x11proto-xinerama-dev libx11-xcb-dev libxcb-glx0-dev libxrender-dev libgl1-mesa-dri libxcb-glx0-dev
-# dri deps
-# 	xutils-dev
-# mesa deps -> apt-get build-dep mesa
-# 	python python-pip libxrandr-dev
-# pip install mako
-
-# report "swras" typo
-#./autogen.sh --prefix=/usr --libdir=${LIBDIR} --with-gallium-drivers=svga --with-dri-drivers=swrast
+	x11-apps; \
+	apt-get install -y xpra
 
 RUN	bash -c 'source /etc/os-release && \
 	echo "deb http://packages.osrfoundation.org/gazebo/$ID-stable \
@@ -28,3 +19,8 @@ RUN	bash -c 'source /etc/os-release && \
 	apt-get update && \
 	apt-get install -y gazebo$GZV; \
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+EXPOSE 10000
+
+CMD ["xpra", "start", ":100", "--start-child=glxgears",  "--daemon=off", "--bind-tcp=0.0.0.0:10000",  \
+	"--no-mdns", "--no-notifications", "--no-pulseaudio"]
