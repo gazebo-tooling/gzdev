@@ -93,8 +93,8 @@ def run(args):
 
 	if gzv:
 		gz_msg = "Spawning docker container for Gazebo %d" % gzv
-		docker_build(path="docker", buildargs={"GZV":"9"}, tag="gz9_phusion_xenial")
-		docker_run("gz9_phusion_xenial", "xeyes", environment=["DISPLAY=192.168.99.1:0"], remove=True)
+		# docker_build(path="docker", buildargs={"GZV":"9"}, tag="gz9_phusion_xenial")
+		# docker_run("gz9_phusion_xenial", "xeyes", environment=["DISPLAY=192.168.99.1:0"], remove=True)
 	else:
 		error("ERROR: Gazebo version was not specified.")
 
