@@ -22,5 +22,6 @@ RUN	bash -c 'source /etc/os-release && \
 
 EXPOSE 10000
 
-CMD ["xpra", "start", ":100", "--start-child=glxgears",  "--daemon=off", "--bind-tcp=0.0.0.0:10000",  \
-	"--no-mdns", "--no-notifications", "--no-pulseaudio"]
+CMD ["xpra", "start", ":100", "--start-child=glxgears", "--daemon=off", \
+	"--opengl=yes", "--bind-tcp=0.0.0.0:10000", "--no-mdns", \
+	"--no-notifications", "--no-pulseaudio"]
