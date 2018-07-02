@@ -93,8 +93,6 @@ def run(args):
 
 	if gzv:
 		gz_msg = "Spawning docker container for Gazebo %d" % gzv
-		# docker_build(path="docker", rm=True, buildargs={"GZV":str(gzv)}, tag="gz"+str(gzv))
-		# docker_run("gz"+gzv, "xeyes", environment=["DISPLAY=192.168.99.1:0"], name="gz"+gzv remove=True)
 	else:
 		error("ERROR: Gazebo version was not specified.")
 
@@ -104,30 +102,70 @@ def run(args):
 	if pr:
 		pr_msg = " from PR# %s" % pr
 
-	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + ".\n")
+	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + "...\n")
+
+	docker_build(
+		path="docker",
+		rm=True,
+		buildargs={"GZV": str(gzv)},
+		tag="gz" + str(gzv))
+
+	docker_run(
+		"gz" + str(gzv),
+		stdin_open=True,
+		tty=True,
+		detach=True,
+		environment=["DISPLAY=192.168.99.1:0"],
+		ports={'10000': 10000},
+		name="gz" + str(gzv),
+		remove=True)
+
+	print("Run Gazebo %d with command: xpra attach tcp:localhost:10000\n" % gzv)
+	print("Stop Gazebo %d with command: docker stop gz%d\n" % (gzv, gzv))
+
 
 def docker_test():
 	dfp = DockerfileParser()
 	dfp.content = """\
-	From  base
-	LABEL foo="bar baz"
-	USER  me
-	RUN ls
-	RUN apt-get update"""
+From  base
 
+LABEL foo="bar baz"
+
+USER  me
+
+RUN apt-get update && \\
+    apt-get install -y --no-install-recommends \\
+    libgl1-mesa-glx \\
+    libgl1-mesa-dri \\
+    xvfb \\
+    mesa-utils \\
+    x11-apps; \\
+    apt-get install -y xpra
+
+RUN apt-get update
+"""
+	# with open("docker/Dockerfile") as dockerfile:
+	# 	dfp.content = dockerfile.read()
 	# Print the parsed structure:
 	# pprint(dfp.structure)
-	pprint(dfp.json)
+	# pprint(dfp.json)
 	# pprint(dfp.labels)
 
 	# Set a new base:
-	dfp.baseimage = 'centos:7'
-	parsed_json = json.loads(dfp.json)
-	parsed_json[3]["RUN"] = "echo hello"
-	print(parsed_json)
+	# dfp.baseimage = 'centos:7'
+	# parsed_json = json.loads(dfp.json)
+	# parsed_json[3]["RUN"] = "echo hello"
+	# print(parsed_json)
 	# dfp.json = json.dumps(parsed_json)
-	dfp._modify_instruction("FROM", "xenial:latest")
-	dfp._modify_instruction("RUN", "")
+	# dfp._modify_instruction("FROM", "xenial:latest")
+	# dfp._add_instruction("RUN", "apt-get update && \\\n\
+	# apt-get install -y --no-install-recommends \\\n\
+	# libgl1-mesa-glx \\\n\
+	# libgl1-mesa-dri \\\n\
+	# xvfb \\\n\
+	# mesa-utils \\\n\
+	# x11-apps; \\\n\
+	# apt-get install -y xpra")
 	# Print the new Dockerfile with an updated FROM line:
 	print(dfp.content)
 
@@ -139,4 +177,5 @@ def main():
 
 
 if __name__ == '__main__':
+	# docker_test()
 	main()
