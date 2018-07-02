@@ -8,6 +8,7 @@ RUN apt-get update && \
 	apt-get install -y --no-install-recommends \
 	libgl1-mesa-glx \
 	libgl1-mesa-dri \
+	xvfb \
 	mesa-utils \
 	x11-apps; \
 	apt-get install -y xpra
@@ -22,6 +23,6 @@ RUN	bash -c 'source /etc/os-release && \
 
 EXPOSE 10000
 
-CMD ["xpra", "start", ":100", "--start-child=glxgears", "--daemon=off", \
+CMD ["xpra", "start", ":100", "--start-child=gazebo --verbose", "--daemon=off", \
 	"--opengl=yes", "--bind-tcp=0.0.0.0:10000", "--no-mdns", \
 	"--no-notifications", "--no-pulseaudio"]
