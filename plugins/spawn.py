@@ -23,6 +23,9 @@ Options:
 """
 from docopt import docopt
 from sys import stderr
+from subprocess import run as run_cmd
+from subprocess import PIPE, CompletedProcess
+from os import environ
 from dockerfile_parse import DockerfileParser
 from pprint import pprint
 import json
@@ -85,8 +88,6 @@ def validate_input(args):
 def run(args):
 	gzv, ros, config, pr, confirm = args
 	gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
-	docker_build = docker.from_env().images.build
-	docker_run = docker.from_env().containers.run
 
 	if ros:
 		ros_msg = " + ROS %s" % ros
@@ -103,71 +104,42 @@ def run(args):
 		pr_msg = " from PR# %s" % pr
 
 	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + "...\n")
+	if __name__ == '__main__':
+		docker_run(str(gzv))
 
-	docker_build(
-		path="docker",
-		rm=True,
-		buildargs={"GZV": str(gzv)},
-		tag="gz" + str(gzv))
+
+def docker_run(gzv):
+	docker_build = docker.from_env().images.build
+	docker_run = docker.from_env().containers.run
+	runtime = "nvidia"
+
+	try:
+		run_cmd(["nvidia-docker", "version"])
+	except FileNotFoundError:
+		runtime = ""
+
+	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag="gz" + gzv)
 
 	docker_run(
-		"gz" + str(gzv),
+		"gz" + gzv,
 		stdin_open=True,
 		tty=True,
 		detach=True,
-		environment=["DISPLAY=192.168.99.1:0"],
+		environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
 		ports={'10000': 10000},
-		name="gz" + str(gzv),
-		remove=True)
+		volumes={'/tmp/.X11-unix':{'bind':'/tmp/.X11-unix', 'mode':'rw'}},
+		name="gz" + gzv,
+		remove=True,
+		runtime=runtime)
 
-	print("Run Gazebo %d with command: xpra attach tcp:localhost:10000\n" % gzv)
-	print("Stop Gazebo %d with command: docker stop gz%d\n" % (gzv, gzv))
+	try:
+		ret = run_cmd(["xpra", "attach", "tcp:localhost:10000"],
+						stdout=PIPE, stderr=PIPE, universal_newlines=True)
+	except KeyboardInterrupt:
+		exit()
 
-
-def docker_test():
-	dfp = DockerfileParser()
-	dfp.content = """\
-From  base
-
-LABEL foo="bar baz"
-
-USER  me
-
-RUN apt-get update && \\
-    apt-get install -y --no-install-recommends \\
-    libgl1-mesa-glx \\
-    libgl1-mesa-dri \\
-    xvfb \\
-    mesa-utils \\
-    x11-apps; \\
-    apt-get install -y xpra
-
-RUN apt-get update
-"""
-	# with open("docker/Dockerfile") as dockerfile:
-	# 	dfp.content = dockerfile.read()
-	# Print the parsed structure:
-	# pprint(dfp.structure)
-	# pprint(dfp.json)
-	# pprint(dfp.labels)
-
-	# Set a new base:
-	# dfp.baseimage = 'centos:7'
-	# parsed_json = json.loads(dfp.json)
-	# parsed_json[3]["RUN"] = "echo hello"
-	# print(parsed_json)
-	# dfp.json = json.dumps(parsed_json)
-	# dfp._modify_instruction("FROM", "xenial:latest")
-	# dfp._add_instruction("RUN", "apt-get update && \\\n\
-	# apt-get install -y --no-install-recommends \\\n\
-	# libgl1-mesa-glx \\\n\
-	# libgl1-mesa-dri \\\n\
-	# xvfb \\\n\
-	# mesa-utils \\\n\
-	# x11-apps; \\\n\
-	# apt-get install -y xpra")
-	# Print the new Dockerfile with an updated FROM line:
-	print(dfp.content)
+	with open("gz" + gzv + ".log", 'w') as log_file:
+		log_file.write(ret.stdout)
 
 
 def main():
@@ -177,5 +149,4 @@ def main():
 
 
 if __name__ == '__main__':
-	# docker_test()
 	main()
