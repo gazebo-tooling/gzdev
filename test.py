@@ -20,7 +20,7 @@ error_code = {}
 def execute(argv):
 	args = spawn.normalize_args(argv)
 	spawn.validate_input(args)
-	spawn.run(args)
+	spawn.print_spawn_msg(args)
 	reset_argv()
 
 

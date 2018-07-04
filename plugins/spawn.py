@@ -21,15 +21,11 @@ Options:
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
 
 """
-from docopt import docopt
-from sys import stderr
-from subprocess import run as run_cmd
-from subprocess import PIPE, CompletedProcess
-from os import environ
-from dockerfile_parse import DockerfileParser
-from pprint import pprint
-import json
 import docker
+from docopt import docopt
+from os import environ
+from subprocess import run, PIPE, CompletedProcess
+from sys import stderr
 
 official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
 gz7_ros = {}.fromkeys(["kinetic", "lunar"])
@@ -67,6 +63,8 @@ def validate_input(args):
 
 	if gzv and gzv not in compatible:
 		error("ERROR: This tool does not support Gazebo %d." % gzv)
+	elif not gzv and not ros:
+		error("ERROR: Gazebo version was not specified.")
 
 	if ros and ros not in official_ros_gzv:
 		error("ERROR: '%s' is not a valid/supported ROS distribution." % ros)
@@ -85,7 +83,7 @@ def validate_input(args):
 			"for more info.")
 
 
-def run(args):
+def print_spawn_msg(args):
 	gzv, ros, config, pr, confirm = args
 	gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
@@ -94,8 +92,6 @@ def run(args):
 
 	if gzv:
 		gz_msg = "Spawning docker container for Gazebo %d" % gzv
-	else:
-		error("ERROR: Gazebo version was not specified.")
 
 	if config:
 		config_msg = " running world configuration %s" % config
@@ -104,48 +100,56 @@ def run(args):
 		pr_msg = " from PR# %s" % pr
 
 	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + "...\n")
-	if __name__ == '__main__':
-		docker_run(str(gzv))
 
 
-def docker_run(gzv):
-	docker_build = docker.from_env().images.build
-	docker_run = docker.from_env().containers.run
+def docker_run(args):
+	gzv, ros, config, pr, confirm = args
+	gzv = str(gzv)
+	tag_name = "gz" + gzv
+	docker_client = docker.from_env()
+	docker_build = docker_client.images.build
+	docker_run = docker_client.containers.run
 	runtime = "nvidia"
 
 	try:
-		run_cmd(["nvidia-docker", "version"])
+		run(["nvidia-docker", "version"])
 	except FileNotFoundError:
 		runtime = ""
 
-	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag="gz" + gzv)
+	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag=tag_name)
+
+	try:
+		docker_client.containers.get(tag_name).stop()
+	except docker.errors.NotFound:
+		pass
 
 	docker_run(
-		"gz" + gzv,
+		tag_name,
 		stdin_open=True,
 		tty=True,
 		detach=True,
 		environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
 		ports={'10000': 10000},
 		volumes={'/tmp/.X11-unix':{'bind':'/tmp/.X11-unix', 'mode':'rw'}},
-		name="gz" + gzv,
+		name=tag_name,
 		remove=True,
 		runtime=runtime)
 
 	try:
-		ret = run_cmd(["xpra", "attach", "tcp:localhost:10000"],
+		ret = run(["xpra", "attach", "tcp:localhost:10000"],
 						stdout=PIPE, stderr=PIPE, universal_newlines=True)
 	except KeyboardInterrupt:
 		exit()
 
-	with open("gz" + gzv + ".log", 'w') as log_file:
+	with open(tag_name + ".log", 'w') as log_file:
 		log_file.write(ret.stdout)
 
 
 def main():
 	args = normalize_args(docopt(__doc__, version="gzdev-spawn 0.1.0"))
 	validate_input(args)
-	run(args)
+	print_spawn_msg(args)
+	docker_run(args)
 
 
 if __name__ == '__main__':
