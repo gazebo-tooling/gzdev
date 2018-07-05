@@ -10,7 +10,8 @@ argv = {
 	"--ros": None,
 	"--config": None,
 	"--pr": None,
-	"--yes": None
+	"--yes": None,
+	"--nvidia": None
 }
 
 run_code = {}
