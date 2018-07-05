@@ -6,6 +6,7 @@ Usage:
 	            [<pr> | --pr=<number>]
 	            [--dev | --source]
 	            [--yes]
+	            [--nvidia]
 	gzdev spawn -h | --help
 	gzdev spawn --version
 
@@ -19,6 +20,7 @@ Options:
 	--dev                   Install Gazebo development libraries
 	--source                Build Gazebo/ROS from source
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
+	--nvidia                Select nvidia as the runtime for the container.
 
 """
 import docker
@@ -32,7 +34,7 @@ gz7_ros = {}.fromkeys(["kinetic", "lunar"])
 gz8_ros = {}.fromkeys(["kinetic", "lunar"])
 gz9_ros = {}.fromkeys(["kinetic", "lunar", "melodic"])
 compatible = {7: gz7_ros, 8: gz8_ros, 9: gz9_ros}
-max_gzv = 9
+max_gzv = sorted(compatible.keys())[-1]
 
 
 def normalize_args(args):
@@ -41,13 +43,14 @@ def normalize_args(args):
 	config = args["<config>"] if args["<config>"] else args["--config"]
 	pr = args["<pr>"] if args["<pr>"] else args["--pr"]
 	confirm = args["--yes"]
+	nvidia = args["--nvidia"]
 
 	ros = ros.lower() if ros else None
 	gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
 	if gzv == None and ros and ros in official_ros_gzv:
 		gzv = official_ros_gzv[ros]
 
-	return gzv, ros, config, pr, confirm
+	return gzv, ros, config, pr, confirm, nvidia
 
 
 def error(msg):
@@ -56,7 +59,7 @@ def error(msg):
 
 
 def validate_input(args):
-	gzv, ros, config, pr, confirm = args
+	gzv, ros, config, pr, confirm, nvidia = args
 
 	if type(gzv) is int and (gzv <= 0 or gzv > max_gzv) or type(gzv) is str:
 		error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
@@ -84,7 +87,7 @@ def validate_input(args):
 
 
 def print_spawn_msg(args):
-	gzv, ros, config, pr, confirm = args
+	gzv, ros, config, pr, confirm, nvidia = args
 	gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
 	if ros:
@@ -103,23 +106,27 @@ def print_spawn_msg(args):
 
 
 def docker_run(args):
-	gzv, ros, config, pr, confirm = args
+	gzv, ros, config, pr, confirm, nvidia = args
 	gzv = str(gzv)
 	tag_name = "gz" + gzv
 	docker_client = docker.from_env()
 	docker_build = docker_client.images.build
 	docker_run = docker_client.containers.run
-	runtime = "nvidia"
+	runtime = ""
+	output = ""
 
-	try:
-		run(["nvidia-docker", "version"])
-	except FileNotFoundError:
-		runtime = ""
+	if (nvidia):
+		try:
+			output = run(["nvidia-docker", "version"],
+				stdout=PIPE, stderr=PIPE, universal_newlines=True).stdout
+			runtime = "nvidia"
+		except FileNotFoundError:
+			runtime = ""
 
 	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag=tag_name)
 
 	try:
-		docker_client.containers.get(tag_name).stop()
+		docker_client.containers.get(tag_name).remove(force=True)
 	except docker.errors.NotFound:
 		pass
 
@@ -136,13 +143,14 @@ def docker_run(args):
 		runtime=runtime)
 
 	try:
-		ret = run(["xpra", "attach", "tcp:localhost:10000"],
-						stdout=PIPE, stderr=PIPE, universal_newlines=True)
+		output += run(["xpra", "attach", "tcp:localhost:10000"],
+					stdout=PIPE, stderr=PIPE, universal_newlines=True).stdout
 	except KeyboardInterrupt:
-		exit()
+		output += "Xpra was stopped with a Keyboard Interrupt./n"
+		pass
 
 	with open(tag_name + ".log", 'w') as log_file:
-		log_file.write(ret.stdout)
+		log_file.write(output)
 
 
 def main():
