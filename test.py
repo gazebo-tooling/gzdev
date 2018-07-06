@@ -1,3 +1,6 @@
+# Copyright 2018 David Rosa
+# Licensed under the Apache License, Version 2.0
+
 from pytest import raises
 from plugins import spawn
 

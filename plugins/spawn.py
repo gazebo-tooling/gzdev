@@ -1,3 +1,5 @@
+# Copyright 2018 David Rosa
+# Licensed under the Apache License, Version 2.0
 """
 Usage:
 	gzdev spawn [<gzv> | --gzv=<number>]
@@ -23,6 +25,7 @@ Options:
 	--nvidia                Select nvidia as the runtime for the container.
 
 """
+
 import docker
 from docopt import docopt
 from os import environ

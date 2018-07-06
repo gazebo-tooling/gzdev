@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# Copyright 2018 David Rosa
+# Licensed under the Apache License, Version 2.0
 """
 Gazebo Dev Tool.
 
