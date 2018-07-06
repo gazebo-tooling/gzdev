@@ -105,7 +105,7 @@ def print_spawn_msg(args):
 	if pr:
 		pr_msg = " from PR# %s" % pr
 
-	print("\n" + gz_msg + ros_msg + config_msg + pr_msg + "...\n")
+	print("\n~~~ " + gz_msg + ros_msg + config_msg + pr_msg + " ~~~\n")
 
 
 def docker_run(args):
@@ -126,6 +126,9 @@ def docker_run(args):
 		except FileNotFoundError:
 			runtime = ""
 
+	print("-> Building docker image. This might take a few minutes...",
+			"\n   You might want to grab a cup of coffee",
+			"(or whatever suits your cup of tea).\n")
 	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag=tag_name)
 
 	try:
@@ -133,6 +136,8 @@ def docker_run(args):
 	except docker.errors.NotFound:
 		pass
 
+	print("-> Running docker container and forwarding, hopefully,",
+			"hardware accelerated GUI to your screen\n")
 	docker_run(
 		tag_name,
 		stdin_open=True,
@@ -149,9 +154,10 @@ def docker_run(args):
 		output += run(["xpra", "attach", "tcp:localhost:10000"],
 					stdout=PIPE, stderr=PIPE, universal_newlines=True).stdout
 	except KeyboardInterrupt:
-		output += "Xpra was stopped with a Keyboard Interrupt./n"
+		output += "Xpra was stopped with a Keyboard Interrupt.\n"
 		pass
 
+	print ("-> Logging output and errors to \"%s.log\".\n" % tag_name)
 	with open(tag_name + ".log", 'w') as log_file:
 		log_file.write(output)
 
