@@ -3,7 +3,7 @@
 # Copyright 2018 David Rosa
 # Licensed under the Apache License, Version 2.0
 """
-Gazebo Dev Tool.
+Streamline many of the usual tasks that Gazebo developers face on a daily basis.
 
 Usage:
 	gzdev [--version] [--help]
@@ -17,7 +17,6 @@ Options:
 
 Commands/Plugins:
 	spawn          Spawn a virtual environment ready for development.
-
 """
 
 from docopt import docopt

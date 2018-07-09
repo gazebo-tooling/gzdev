@@ -1,6 +1,8 @@
 # Copyright 2018 David Rosa
 # Licensed under the Apache License, Version 2.0
 """
+Spawn various Gazebo versions and ROS distributions inside docker containers.
+
 Usage:
 	gzdev spawn [<gzv> | --gzv=<number>]
 	            [<ros> | --ros=<distro_name>]
@@ -23,7 +25,6 @@ Options:
 	--source                Build Gazebo/ROS from source
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
 	--nvidia                Select nvidia as the runtime for the container.
-
 """
 
 import docker
