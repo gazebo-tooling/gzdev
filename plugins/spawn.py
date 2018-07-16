@@ -1,8 +1,6 @@
 # Copyright 2018 David Rosa
 # Licensed under the Apache License, Version 2.0
 """
-Spawn various Gazebo versions and ROS distributions inside docker containers.
-
 Usage:
 	gzdev spawn [<gzv> | --gzv=<number>]
 	            [<ros> | --ros=<distro_name>]
@@ -25,13 +23,22 @@ Options:
 	--source                Build Gazebo/ROS from source
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
 	--nvidia                Select nvidia as the runtime for the container.
+
 """
 
 import docker
 from docopt import docopt
 from os import environ
-from subprocess import run, PIPE, CompletedProcess
+from os.path import dirname, realpath
+from subprocess import run, PIPE, CalledProcessError
 from sys import stderr
+
+# `official_ros_gzv` contains only the official Gazebo version
+# chosen to go with a particular ROS release. Whereas `compatible` contains both
+# officially and unofficially supported ROS/Gazebo combinations.
+# `official_ros_gzv` is useful for auto-selecting and displaying the official
+# Gazebo version that goes with a specified ROS distro when the user
+# does not pass the --gzv parameter e.g. `gzdev spawn --ros=melodic`
 
 official_ros_gzv = {"kinetic": 7, "lunar": 7, "melodic": 9}
 gz7_ros = {}.fromkeys(["kinetic", "lunar"])
@@ -116,58 +123,121 @@ def docker_run(args):
 	docker_client = docker.from_env()
 	docker_build = docker_client.images.build
 	docker_run = docker_client.containers.run
-	runtime = ""
-	output = ""
+	runtime = None
+	cmd = ""
+	container_log = "~~~ Container Log ~~~\n"
+	client_log = "\n~~~ Client log ~~~\n\n"
+	tmp_log = ""
+	gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
+	log_path = gzdev_path + tag_name + ".log"
+	log_i = 0
 
-	if (nvidia):
+	if nvidia:
 		try:
-			output = run(["nvidia-docker", "version"],
-				stdout=PIPE, stderr=PIPE, universal_newlines=True).stdout
 			runtime = "nvidia"
+			cmd = "gazebo --verbose"
+			client_log += run(["nvidia-docker", "version"], stdout=PIPE,
+				stderr=PIPE, universal_newlines=True).stdout
 		except FileNotFoundError:
-			runtime = ""
+			runtime = None
+			client_log += "[ERROR] `nvidia-docker` command was not found.\n"
 
-	print("-> Building docker image. This might take a few minutes...",
-			"\n   You might want to grab a cup of coffee",
-			"(or whatever suits your cup of tea).\n")
-	docker_build(path="docker", rm=True, buildargs={"GZV": gzv}, tag=tag_name)
+	print("-> Building docker image. The first time will take a few minutes...",
+		"\n   You might want to grab a cup of coffee",
+		"or whatever suits your cup of tea :)\n")
 
+	docker_build(path=gzdev_path + "docker", rm=True, buildargs={"GZV": gzv},
+		tag=tag_name)
+
+	# The docker container is configured to remove itself after the user closes
+	# Gazebo or if an error occurs. But sometimes, the container from a previous
+	# run might still exist. In such cases, calling gzdev spawn again with the
+	# same parameters would trigger a name conflict and throw an error.
+	# Therfore, it's best to try removing the container with the same name tag,
+	# if any, so we can perform a clean docker run right after.
 	try:
 		docker_client.containers.get(tag_name).remove(force=True)
+		client_log += "Found and removed container from previous spawn.\n"
 	except docker.errors.NotFound:
 		pass
 
-	print("-> Running docker container and forwarding, hopefully,",
-			"hardware accelerated GUI to your screen\n")
-	docker_run(
-		tag_name,
-		stdin_open=True,
-		tty=True,
-		detach=True,
-		environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
-		ports={'10000': 10000},
-		volumes={'/tmp/.X11-unix':{'bind':'/tmp/.X11-unix', 'mode':'rw'}},
-		name=tag_name,
-		remove=True,
-		runtime=runtime)
-
 	try:
-		output += run(["xpra", "attach", "tcp:localhost:10000"],
-					stdout=PIPE, stderr=PIPE, universal_newlines=True).stdout
-	except KeyboardInterrupt:
-		output += "Xpra was stopped with a Keyboard Interrupt.\n"
-		pass
+		container = \
+		docker_run(
+			tag_name,
+			command=cmd,
+			stdin_open=True,
+			tty=True,
+			detach=True,
+			environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
+			ports={'10000': 10000},
+			volumes={'/tmp/.X11-unix': {
+			'bind': '/tmp/.X11-unix',
+			'mode': 'rw'
+			}},
+			name=tag_name,
+			runtime=runtime)
+	except docker.errors.APIError as error:
+		client_log += "[ERROR] " + error.explanation
+		client_log += "Could not spawn docker container.\n"
+		container_log += "NONE"
+		exit()
 
-	print ("-> Logging output and errors to \"%s.log\".\n" % tag_name)
-	with open(tag_name + ".log", 'w') as log_file:
-		log_file.write(output)
+	print("-> Running docker container and forwarding",
+		"hardware accelerated graphics to your screen\n")
+
+	# The following code ensures the xpra client does not attach to the
+	# xpra host before the server is up and ready to accept connections.
+	# At the same time, we store and then log the output of the xpra server.
+	if not nvidia:
+		try:
+			for log in container.logs(stream=True):
+				tmp_log += log
+				if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
+					break
+		except KeyboardInterrupt:
+			client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
+
+		# Store the current length of the container's log so then we can use it
+		# as an index to continue logging the rest of the Xpra server's output.
+		log_i = len(container.logs())
+		container_log += tmp_log
+
+		# Run and attach the Xpra client to the Xpra server
+		try:
+			client_log += run(["xpra", "attach", "tcp:localhost:10000"],
+				stdout=PIPE, stderr=PIPE, universal_newlines=True,
+				check=True).stdout
+		except CalledProcessError:
+			client_log += "Xpra client was not able to connect to xpra server.\n"
+		except KeyboardInterrupt:
+			client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
+
+	# Log both Gazebo's and Xpra server's output after client shutdown.
+	try:
+		tmp_log = container.logs()[log_i:]
+		docker_client.containers.get(tag_name).remove(force=True)
+		client_log += "Succesfully stopped and removed running container.\n"
+		# Convert tmp byte string to printable pretty string
+		for log in tmp_log:
+			container_log += chr(log)
+	except (docker.errors.NotFound, docker.errors.APIError):
+		client_log += "Container might have been force removed by user.\n"
+		client_log += "[ERROR] Container not found. Failed to log and remove.\n"
+
+	print("-> Logging output and errors to \"%s\".\n" % log_path)
+	with open(log_path, 'w') as log_file:
+		log_file.write(container_log + client_log)
 
 
 def main():
-	args = normalize_args(docopt(__doc__, version="gzdev-spawn 0.1.0"))
-	validate_input(args)
-	print_spawn_msg(args)
-	docker_run(args)
+	try:
+		args = normalize_args(docopt(__doc__, version="gzdev-spawn 0.1.0"))
+		validate_input(args)
+		print_spawn_msg(args)
+		docker_run(args)
+	except KeyboardInterrupt:
+		print("spawn was stopped with a Keyboard Interrupt.\n")
 
 
 if __name__ == '__main__':
