@@ -192,7 +192,10 @@ def docker_run(args):
     if not nvidia:
         try:
             for log in container.logs(stream=True):
-                tmp_log += log
+                if type(log) is bytes:
+                    tmp_log += log.decode("utf8")
+                else:
+                    tmp_log += log
                 if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
                     break
         except KeyboardInterrupt:
