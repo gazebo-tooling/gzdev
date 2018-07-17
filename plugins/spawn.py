@@ -116,6 +116,12 @@ def print_spawn_msg(args):
     print("\n~~~ " + gz_msg + ros_msg + config_msg + pr_msg + " ~~~\n")
 
 
+def write_log(log_path, log):
+    print("-> Logging output and errors to \"%s\".\n" % log_path)
+    with open(log_path, 'w') as log_file:
+        log_file.write(log)
+
+
 def docker_run(args):
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
@@ -129,7 +135,6 @@ def docker_run(args):
     client_log = "\n~~~ Client log ~~~\n\n"
     tmp_log = ""
     gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
-    log_path = gzdev_path + tag_name + ".log"
     log_i = 0
 
     if nvidia:
@@ -181,6 +186,7 @@ def docker_run(args):
         client_log += "[ERROR] " + error.explanation
         client_log += "Could not spawn docker container.\n"
         container_log += "NONE"
+        write_log(gzdev_path + tag_name + ".log", container_log + client_log)
         exit()
 
     print("-> Running docker container and forwarding",
@@ -236,9 +242,7 @@ def docker_run(args):
         client_log += "Container might have been force removed by user.\n"
         client_log += "[ERROR] Container not found. Failed to log and remove.\n"
 
-    print("-> Logging output and errors to \"%s\".\n" % log_path)
-    with open(log_path, 'w') as log_file:
-        log_file.write(container_log + client_log)
+    write_log(gzdev_path + tag_name + ".log", container_log + client_log)
 
 
 def main():
