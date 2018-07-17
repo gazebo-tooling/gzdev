@@ -122,7 +122,7 @@ def write_log(log_path, log):
         log_file.write(log)
 
 
-def docker_run(args):
+def spawn_container(args):
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
     tag_name = "gz" + gzv
@@ -250,7 +250,7 @@ def main():
         args = normalize_args(docopt(__doc__, version="gzdev-spawn 0.1.0"))
         validate_input(args)
         print_spawn_msg(args)
-        docker_run(args)
+        spawn_container(args)
     except KeyboardInterrupt:
         print("spawn was stopped with a Keyboard Interrupt.\n")
 
