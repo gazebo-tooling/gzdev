@@ -3,12 +3,12 @@
 """
 Usage:
 	gzdev spawn [<gzv> | --gzv=<number>]
-	            [<ros> | --ros=<distro_name>]
-	            [<config> | --config=<file_name>]
-	            [<pr> | --pr=<number>]
-	            [--dev | --source]
-	            [--yes]
-	            [--nvidia]
+				[<ros> | --ros=<distro_name>]
+				[<config> | --config=<file_name>]
+				[<pr> | --pr=<number>]
+				[--dev | --source]
+				[--yes]
+				[--nvidia]
 	gzdev spawn -h | --help
 	gzdev spawn --version
 
@@ -212,6 +212,14 @@ def docker_run(args):
 			client_log += "Xpra client was not able to connect to xpra server.\n"
 		except KeyboardInterrupt:
 			client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
+		except FileNotFoundError:
+				client_log += "[ERROR] `xpra` command was not found.\n"
+	else:
+		try:
+			for log in container.logs(stream=True):
+				pass
+		except KeyboardInterrupt:
+			client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
 
 	# Log both Gazebo's and Xpra server's output after client shutdown.
 	try:
