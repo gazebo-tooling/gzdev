@@ -23,7 +23,7 @@ from docopt import docopt
 from importlib import import_module
 
 if __name__ == '__main__':
-	args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)
-	command = args['<command>']
-	plugin = import_module("plugins." + command)
-	plugin.main()
+    args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)
+    command = args['<command>']
+    plugin = import_module("plugins." + command)
+    plugin.main()
