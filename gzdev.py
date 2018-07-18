@@ -21,9 +21,15 @@ Commands/Plugins:
 
 from docopt import docopt
 from importlib import import_module
+from sys import stderr
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)
-    command = args['<command>']
-    plugin = import_module("plugins." + command)
-    plugin.main()
+    cmd = args['<command>']
+    is_valid = {"spawn": True}
+
+    if is_valid.get(cmd):
+        plugin = import_module("plugins." + cmd)
+        plugin.main()
+    else:
+        print("\nERROR: `%s` is not a valid gzdev plugin.\n" % cmd, file=stderr)
