@@ -7,13 +7,13 @@ gzdev is a command line tool that facilitates the development of the open source
 * [Python](https://www.python.org/downloads/) - Version 3.5 or greater recommended
 * [Xpra](https://www.xpra.org/trac/wiki/Download) - Multi-platform screen and application forwarding system a.k.a. screen for X11. Required for Mac OS X and Windows, but optional for Linux
 
-1. Clone the repository  
+1. Clone the repository
 `git clone https://github.com/osrf/gzdev.git && cd gzdev`
 
-2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional)  
-`pip install -r requirements.txt`
+2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional)
+`pip3 install -r requirements.txt`
 
-3. Create an alias pointing to the core python script and add it to your ~/.bashrc  
+3. Create an alias pointing to the core python script and add it to your ~/.bashrc
 `alias gzdev=`/full/path/to/`gzdev.py`
 
 # Usage
