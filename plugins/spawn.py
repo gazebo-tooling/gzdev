@@ -120,6 +120,7 @@ def write_log(log_path, log):
     print("-> Logging output and errors to \"%s\".\n" % log_path)
     with open(log_path, 'w') as log_file:
         log_file.write(log)
+    print(log)
 
 
 def spawn_container(args):
