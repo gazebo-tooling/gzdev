@@ -125,7 +125,7 @@ def write_log(log_path, log):
 
 def spawn_container(args):
     run("nvidia-smi", shell=True)
-    run("add-apt-repository ppa:graphics-drivers/ppa", shell=True)
+    run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
     run("apt-get update && apt-get install wget nvidia-graphics-drivers-390 nvidia-modprobe",
         shell=True)
     run("wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb",
