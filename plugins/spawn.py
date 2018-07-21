@@ -125,9 +125,10 @@ def write_log(log_path, log):
 
 def spawn_container(args):
     run("glxinfo -B", shell=True)
+    run("apt-get update && apt-get install wget", shell=True)
     run("wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb",
         shell=True)
-    run("sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb",
+    run("dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb",
         shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
