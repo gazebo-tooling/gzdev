@@ -124,6 +124,9 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
+    run("glxinfo -B", shell=True)
+    run("apt-get update && apt-get install nvidia-docker", shell=True)
+
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
     tag_name = "gz" + gzv
