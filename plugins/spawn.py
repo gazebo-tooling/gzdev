@@ -237,7 +237,7 @@ def spawn_container(args):
         except FileNotFoundError:
             client_log += "[ERROR] `xpra` command was not found.\n"
     else:
-        run('nvidia-docker run -it --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gazebo --verbose',
+        run('nvidia-docker run -it --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
             shell=True)
         # try:
         #     for log in container.logs(stream=True):
