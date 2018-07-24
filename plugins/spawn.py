@@ -150,8 +150,8 @@ def spawn_container(args):
 
     if nvidia:
         try:
-            # runtime = "nvidia"
-            cmd = "xvfb-gazebo"
+            runtime = "nvidia"
+            cmd = "gazebo --verbose"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
@@ -262,7 +262,7 @@ def spawn_container(args):
             client_log += "Container might have been force removed by user.\n"
             client_log += "[ERROR] Container not found. Failed to log and remove.\n"
     elif runtime == "nvidia":
-        run('nvidia-docker run -it --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
+        run('nvidia-docker run --rm -itd --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
             shell=True)
         # TODO: Log nvidia-docker output
     write_log(gzdev_path + tag_name + ".log", container_log + client_log)
