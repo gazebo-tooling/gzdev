@@ -247,8 +247,8 @@ def spawn_container(args):
         #                 print(log, end="")
         #             if tmp_log.endswith("Publicized address"):
         #                 break
-            except KeyboardInterrupt:
-                client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+        # except KeyboardInterrupt:
+        #     client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
 
         # Log both Gazebo's and Xpra server's output after client shutdown.
         try:
@@ -264,7 +264,21 @@ def spawn_container(args):
     elif runtime == "nvidia":
         run('nvidia-docker run --rm -itd --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
             shell=True)
+        logs = docker_client.containers.get(tag_name).logs(stream=True)
         # TODO: Log nvidia-docker output
+        try:
+            for log in logs:
+                if type(log) is bytes:
+                    tmp_log += log.decode("utf8")
+                    print(log.decode("utf8"), end="")
+                else:
+                    tmp_log += log
+                    print(log, end="")
+                if tmp_log.endswith("Publicized address"):
+                    break
+        except KeyboardInterrupt:
+            client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+
     write_log(gzdev_path + tag_name + ".log", container_log + client_log)
 
 
