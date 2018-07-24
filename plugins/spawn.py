@@ -127,11 +127,10 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
-    # run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
-    # run("apt-get update && apt-get install -y wget nvidia-390 nvidia-modprobe",
-    # shell=True)
-    # run("glxinfo -B", shell=True)
-    # run("nvidia-smi", shell=True)
+    run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
+    run("apt-get update && apt-get install -y nvidia-modprobe", shell=True)
+    run("glxinfo -B", shell=True)
+    run("nvidia-smi", shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
