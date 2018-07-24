@@ -236,12 +236,15 @@ def spawn_container(args):
                 client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
             except FileNotFoundError:
                 client_log += "[ERROR] `xpra` command was not found.\n"
-        # else:
-        #     try:
-        #         for log in container.logs(stream=True):
-        #             pass
-        #     except KeyboardInterrupt:
-        #         client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+        else:
+            try:
+                for log in container.logs(stream=True):
+                    if type(log) is bytes:
+                        print(log.decode("utf8"), end="")
+                    else:
+                        print(log, end="")
+            except KeyboardInterrupt:
+                client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
 
         # Log both Gazebo's and Xpra server's output after client shutdown.
         try:
