@@ -127,10 +127,11 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
-    run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
-    run("apt-get update && apt-get install -y nvidia-modprobe", shell=True)
-    run("glxinfo -B", shell=True)
-    run("nvidia-smi", shell=True)
+    # run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
+    # run("apt-get update && apt-get install -y wget nvidia-390 nvidia-modprobe",
+    # shell=True)
+    # run("glxinfo -B", shell=True)
+    # run("nvidia-smi", shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
@@ -148,8 +149,8 @@ def spawn_container(args):
 
     if nvidia:
         try:
-            runtime = "nvidia"
-            cmd = "gazebo --verbose"
+            # runtime = "nvidia"
+            cmd = "xvfb-gazebo"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
