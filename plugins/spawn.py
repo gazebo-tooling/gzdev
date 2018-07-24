@@ -124,6 +124,7 @@ def write_log(log_path, log):
     run("ps aux | pgrep gazebo", shell=True)
     run("ps aux | grep gazebo", shell=True)
     run("ps aux", shell=True)
+    run("docker logs gz8", shell=True)
 
 
 def spawn_container(args):
