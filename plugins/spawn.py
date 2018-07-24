@@ -149,8 +149,8 @@ def spawn_container(args):
 
     if nvidia:
         try:
-            # runtime = "nvidia"
-            cmd = "xvfb-gazebo"
+            runtime = "nvidia"
+            cmd = "gazebo --verbose"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
