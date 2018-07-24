@@ -19,6 +19,7 @@ RUN curl http://packages.osrfoundation.org/gazebo.key | apt-key add -
 RUN apt-get update && apt-get install -y xpra=2.3.*
 RUN apt-get update && apt-get install -y gazebo$GZV
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN ["bash", "-c", "echo -e '#!/bin/bash\nxvfb-run -s \"-screen 0 1280x1024x24\" gazebo --verbose' > /usr/bin/xvfb-gazebo && chmod +x /usr/bin/xvfb-gazebo"]
 
 EXPOSE 10000
 

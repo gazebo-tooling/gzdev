@@ -120,20 +120,14 @@ def write_log(log_path, log):
     print("-> Logging output and errors to \"%s\".\n" % log_path)
     with open(log_path, 'w') as log_file:
         log_file.write(log)
-    print(log)
 
 
 def spawn_container(args):
-    run("nvidia-smi", shell=True)
-    run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
-    run("apt-get update && apt-get install -y wget nvidia-390 nvidia-modprobe",
-        shell=True)
-    run("wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb",
-        shell=True)
-    run("dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb",
-        shell=True)
-    run("glxinfo -B", shell=True)
-    run("nvidia-smi", shell=True)
+    # run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
+    # run("apt-get update && apt-get install -y wget nvidia-390 nvidia-modprobe",
+    # shell=True)
+    # run("glxinfo -B", shell=True)
+    # run("nvidia-smi", shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
@@ -151,8 +145,8 @@ def spawn_container(args):
 
     if nvidia:
         try:
-            runtime = "nvidia"
-            cmd = "gazebo --verbose"
+            # runtime = "nvidia"
+            cmd = "xvfb-gazebo"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
@@ -209,24 +203,24 @@ def spawn_container(args):
         # The following code ensures the xpra client does not attach to the
         # xpra host before the server is up and ready to accept connections.
         # At the same time, we store and then log the output of the xpra server.
-        try:
-            for log in container.logs(stream=True):
-                if type(log) is bytes:
-                    tmp_log += log.decode("utf8")
-                else:
-                    tmp_log += log
-                if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
-                    break
-        except KeyboardInterrupt:
-            client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
-
-        # Store the current length of the container's log so then we can use it
-        # as an index to continue logging the rest of the Xpra server's output.
-        log_i = len(container.logs())
-        container_log += tmp_log
-
-        # Run and attach the Xpra client to the Xpra server
         if not nvidia:
+            try:
+                for log in container.logs(stream=True):
+                    if type(log) is bytes:
+                        tmp_log += log.decode("utf8")
+                    else:
+                        tmp_log += log
+                    if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
+                        break
+            except KeyboardInterrupt:
+                client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
+
+            # Store the current length of the container's log so then we can use it
+            # as an index to continue logging the rest of the Xpra server's output.
+            log_i = len(container.logs())
+            container_log += tmp_log
+
+            # Run and attach the Xpra client to the Xpra server
             try:
                 client_log += run(["xpra", "attach", "tcp:localhost:10000"],
                                   stdout=PIPE, stderr=PIPE,
@@ -237,24 +231,24 @@ def spawn_container(args):
                 client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
             except FileNotFoundError:
                 client_log += "[ERROR] `xpra` command was not found.\n"
-        else:
-            try:
-                for log in container.logs(stream=True):
-                    pass
-            except KeyboardInterrupt:
-                client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+        # else:
+        #     try:
+        #         for log in container.logs(stream=True):
+        #             pass
+        #     except KeyboardInterrupt:
+        #         client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
 
         # Log both Gazebo's and Xpra server's output after client shutdown.
-            try:
-                tmp_log = container.logs()[log_i:]
-                docker_client.containers.get(tag_name).remove(force=True)
-                client_log += "Succesfully stopped and removed running container.\n"
-                # Convert tmp byte string to printable pretty string
-                for log in tmp_log:
-                    container_log += chr(log)
-            except (docker.errors.NotFound, docker.errors.APIError):
-                client_log += "Container might have been force removed by user.\n"
-                client_log += "[ERROR] Container not found. Failed to log and remove.\n"
+        try:
+            tmp_log = container.logs()[log_i:]
+            # docker_client.containers.get(tag_name).remove(force=True)
+            client_log += "Succesfully stopped and removed running container.\n"
+            # Convert tmp byte string to printable pretty string
+            for log in tmp_log:
+                container_log += chr(log)
+        except (docker.errors.NotFound, docker.errors.APIError):
+            client_log += "Container might have been force removed by user.\n"
+            client_log += "[ERROR] Container not found. Failed to log and remove.\n"
     elif runtime == "nvidia":
         run('nvidia-docker run -it --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
             shell=True)
