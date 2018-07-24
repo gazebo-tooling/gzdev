@@ -120,6 +120,10 @@ def write_log(log_path, log):
     print("-> Logging output and errors to \"%s\".\n" % log_path)
     with open(log_path, 'w') as log_file:
         log_file.write(log)
+    run("ps", shell=True)
+    run("ps aux | pgrep gazebo", shell=True)
+    run("ps aux | grep gazebo", shell=True)
+    run("ps aux", shell=True)
 
 
 def spawn_container(args):
