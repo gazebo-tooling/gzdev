@@ -136,7 +136,7 @@ def spawn_container(args):
     # run("nvidia-smi", shell=True)
     print("$DISPLAY is:")
     run("echo $DISPLAY", shell=True)
-    run("DISPLAY=:0.0", shell=True)
+    run("export DISPLAY=:0.0", shell=True)
     print("Now $DISPLAY is:")
     run("echo $DISPLAY", shell=True)
 
