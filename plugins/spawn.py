@@ -260,8 +260,12 @@ def spawn_container(args):
             client_log += "Container might have been force removed by user.\n"
             client_log += "[ERROR] Container not found. Failed to log and remove.\n"
     elif runtime == "nvidia":
-        run('nvidia-docker run --rm -itd --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
-            shell=True)
+        run([
+            'nvidia-docker', 'run', '-itd', '--name=' + tag_name,
+            '--env="DISPLAY"', '--env="QT_X11_NO_MITSHM=1"',
+            '--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw"', tag_name,
+            'gazebo --verbose'
+        ])
         logs = docker_client.containers.get(tag_name).logs(stream=True)
         try:
             for log in logs:
