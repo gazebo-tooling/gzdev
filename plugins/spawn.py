@@ -116,6 +116,27 @@ def print_spawn_msg(args):
     print("\n~~~ " + gz_msg + ros_msg + config_msg + pr_msg + " ~~~\n")
 
 
+def log_nvidia_docker(docker_client, tag_name, path, container_log, client_log):
+    try:
+        container = docker_client.containers.get(tag_name)
+        logs = container.logs(stream=True)
+        for log in logs:
+            if type(log) is bytes:
+                container_log += log.decode("utf8")
+            else:
+                container_log += log
+    except KeyboardInterrupt:
+        client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+    except (docker.errors.NotFound, docker.errors.APIError):
+        client_log += "Container might have been force removed by user.\n"
+        client_log += "[ERROR] Container not found. Failed to log and remove.\n"
+    if container:
+        container.remove(force=True)
+        client_log += "Succesfully stopped and removed running container.\n"
+
+    write_log(path + tag_name + ".log", container_log + client_log)
+
+
 def write_log(log_path, log):
     print("-> Logging output and errors to \"%s\".\n" % log_path)
     with open(log_path, 'w') as log_file:
@@ -130,10 +151,9 @@ def spawn_container(args):
     docker_build = docker_client.images.build
     docker_run = docker_client.containers.run
     runtime = None
-    cmd = ""
+    cmd = None
     container_log = "~~~ Container Log ~~~\n"
     client_log = "\n~~~ Client log ~~~\n\n"
-    tmp_log = ""
     gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
     log_i = 0
 
@@ -166,83 +186,74 @@ def spawn_container(args):
     except docker.errors.NotFound:
         pass
 
-    try:
-        container = \
-        docker_run(
-         tag_name,
-         command=cmd,
-         stdin_open=True,
-         tty=True,
-         detach=True,
-         environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
-         ports={'10000': 10000},
-         volumes={'/tmp/.X11-unix': {
-         'bind': '/tmp/.X11-unix',
-         'mode': 'rw'
-         }},
-         name=tag_name,
-         runtime=runtime)
-    except docker.errors.APIError as error:
-        client_log += "[ERROR] " + error.explanation
-        client_log += "Could not spawn docker container.\n"
-        container_log += "NONE"
-        write_log(gzdev_path + tag_name + ".log", container_log + client_log)
-        exit()
-
     print("-> Running docker container and forwarding",
           "hardware accelerated graphics to your screen\n")
 
-    # The following code ensures the xpra client does not attach to the
-    # xpra host before the server is up and ready to accept connections.
-    # At the same time, we store and then log the output of the xpra server.
-    if not nvidia:
+    if runtime == "nvidia":
+        run([
+            'nvidia-docker', 'run', '-itd', '--name=' + tag_name,
+            '--env=DISPLAY', '--env=QT_X11_NO_MITSHM=1',
+            '--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw', tag_name, 'gazebo',
+            '--verbose'
+        ])
+        log_nvidia_docker(docker_client, tag_name, gzdev_path, container_log,
+                          client_log)
+    elif not runtime:
         try:
-            for log in container.logs(stream=True):
-                if type(log) is bytes:
-                    tmp_log += log.decode("utf8")
-                else:
-                    tmp_log += log
-                if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
-                    break
-        except KeyboardInterrupt:
-            client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
+            container = docker_run(
+                tag_name, command=cmd, stdin_open=True, tty=True, detach=True,
+                environment=[
+                    "DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"
+                ], ports={'10000': 10000}, volumes={
+                    '/tmp/.X11-unix': {'bind': '/tmp/.X11-unix', 'mode': 'rw'}
+                }, name=tag_name, runtime=runtime)
+        except docker.errors.APIError as error:
+            client_log += "[ERROR] " + error.explanation
+            client_log += "Could not spawn docker container.\n"
+            container_log += "NONE"
+            write_log(gzdev_path + tag_name + ".log",
+                      container_log + client_log)
+            exit()
 
-        # Store the current length of the container's log so then we can use it
-        # as an index to continue logging the rest of the Xpra server's output.
-        log_i = len(container.logs())
-        container_log += tmp_log
+        # The following code ensures the xpra client does not attach to the
+        # xpra host before the server is up and ready to accept connections.
+        # At the same time, we store and then log the output of the xpra server.
+        if not nvidia:
+            try:
+                for log in container.logs(stream=True):
+                    if type(log) is bytes:
+                        container_log += log.decode("utf8")
+                    else:
+                        container_log += log
+                    if container_log.endswith("xpra is ready.\x1b[0m\r\n"):
+                        break
+            except KeyboardInterrupt:
+                client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
 
-        # Run and attach the Xpra client to the Xpra server
-        try:
-            client_log += run(["xpra", "attach", "tcp:localhost:10000"],
-                              stdout=PIPE, stderr=PIPE, universal_newlines=True,
-                              check=True).stdout
-        except CalledProcessError:
-            client_log += "Xpra client was not able to connect to xpra server.\n"
-        except KeyboardInterrupt:
-            client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
-        except FileNotFoundError:
-            client_log += "[ERROR] `xpra` command was not found.\n"
-    else:
-        try:
-            for log in container.logs(stream=True):
-                pass
-        except KeyboardInterrupt:
-            client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+            # Store the current length of the container's log so then we can use it
+            # as an index to continue logging the rest of the Xpra server's output.
+            log_i = len(container.logs())
 
-    # Log both Gazebo's and Xpra server's output after client shutdown.
-    try:
-        tmp_log = container.logs()[log_i:]
-        docker_client.containers.get(tag_name).remove(force=True)
-        client_log += "Succesfully stopped and removed running container.\n"
-        # Convert tmp byte string to printable pretty string
-        for log in tmp_log:
-            container_log += chr(log)
-    except (docker.errors.NotFound, docker.errors.APIError):
-        client_log += "Container might have been force removed by user.\n"
-        client_log += "[ERROR] Container not found. Failed to log and remove.\n"
-
-    write_log(gzdev_path + tag_name + ".log", container_log + client_log)
+            # Run and attach the Xpra client to the Xpra server
+            try:
+                client_log += run(["xpra", "attach", "tcp:localhost:10000"],
+                                  stdout=PIPE, stderr=PIPE,
+                                  universal_newlines=True, check=True).stdout
+            except CalledProcessError:
+                client_log += "Xpra client was not able to connect to xpra server.\n"
+            except KeyboardInterrupt:
+                client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
+            except FileNotFoundError:
+                client_log += "[ERROR] `xpra` command was not found.\n"
+            # Log both Gazebo's and Xpra server's output after client shutdown.
+            # Convert tmp byte string to printable pretty string
+            for log in container.logs()[log_i:]:
+                container_log += chr(log)
+            write_log(gzdev_path + tag_name + ".log",
+                      container_log + client_log)
+        else:
+            log_nvidia_docker(docker_client, tag_name, gzdev_path,
+                              container_log, client_log)
 
 
 def main():
