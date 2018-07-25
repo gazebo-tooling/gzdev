@@ -116,22 +116,34 @@ def print_spawn_msg(args):
     print("\n~~~ " + gz_msg + ros_msg + config_msg + pr_msg + " ~~~\n")
 
 
+def log_nvidia_docker(docker_client, tag_name, path, container_log, client_log):
+    try:
+        container = docker_client.containers.get(tag_name)
+        logs = container.logs(stream=True)
+        for log in logs:
+            if type(log) is bytes:
+                container_log += log.decode("utf8")
+            else:
+                container_log += log
+    except KeyboardInterrupt:
+        client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+    except (docker.errors.NotFound, docker.errors.APIError):
+        client_log += "Container might have been force removed by user.\n"
+        client_log += "[ERROR] Container not found. Failed to log and remove.\n"
+    if container:
+        container.remove(force=True)
+        client_log += "Succesfully stopped and removed running container.\n"
+
+    write_log(path + tag_name + ".log", container_log + client_log)
+
+
 def write_log(log_path, log):
     print("-> Logging output and errors to \"%s\".\n" % log_path)
     with open(log_path, 'w') as log_file:
         log_file.write(log)
-    run("ps", shell=True)
-    run("ps aux | pgrep gazebo", shell=True)
-    run("ps aux | grep gazebo", shell=True)
-    run("ps aux", shell=True)
-    run("docker top gz8", shell=True)
-    run("docker logs gz8", shell=True)
 
 
 def spawn_container(args):
-    # run("glxinfo -B", shell=True)
-    # run("nvidia-smi", shell=True)
-
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
     tag_name = "gz" + gzv
@@ -142,7 +154,6 @@ def spawn_container(args):
     cmd = None
     container_log = "~~~ Container Log ~~~\n"
     client_log = "\n~~~ Client log ~~~\n\n"
-    tmp_log = ""
     gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
     log_i = 0
 
@@ -178,23 +189,24 @@ def spawn_container(args):
     print("-> Running docker container and forwarding",
           "hardware accelerated graphics to your screen\n")
 
-    if not runtime:
+    if runtime == "nvidia":
+        run([
+            'nvidia-docker', 'run', '-itd', '--name=' + tag_name,
+            '--env=DISPLAY', '--env=QT_X11_NO_MITSHM=1',
+            '--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw', tag_name, 'gazebo',
+            '--verbose'
+        ])
+        log_nvidia_docker(docker_client, tag_name, gzdev_path, container_log,
+                          client_log)
+    elif not runtime:
         try:
-            container = \
-            docker_run(
-            tag_name,
-            command=cmd,
-            stdin_open=True,
-            tty=True,
-            detach=True,
-            environment=["DISPLAY=:0.0", "QT_X11_NO_MITSHM=1"],
-            ports={'10000': 10000},
-            volumes={'/tmp/.X11-unix': {
-            'bind': '/tmp/.X11-unix',
-            'mode': 'rw'
-            }},
-            name=tag_name,
-            runtime=runtime)
+            container = docker_run(
+                tag_name, command=cmd, stdin_open=True, tty=True, detach=True,
+                environment=[
+                    "DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"
+                ], ports={'10000': 10000}, volumes={
+                    '/tmp/.X11-unix': {'bind': '/tmp/.X11-unix', 'mode': 'rw'}
+                }, name=tag_name, runtime=runtime)
         except docker.errors.APIError as error:
             client_log += "[ERROR] " + error.explanation
             client_log += "Could not spawn docker container.\n"
@@ -210,10 +222,10 @@ def spawn_container(args):
             try:
                 for log in container.logs(stream=True):
                     if type(log) is bytes:
-                        tmp_log += log.decode("utf8")
+                        container_log += log.decode("utf8")
                     else:
-                        tmp_log += log
-                    if tmp_log.endswith("xpra is ready.\x1b[0m\r\n"):
+                        container_log += log
+                    if container_log.endswith("xpra is ready.\x1b[0m\r\n"):
                         break
             except KeyboardInterrupt:
                 client_log += "Xpra server polling stopped with a Keyboard Interrupt.\n"
@@ -221,7 +233,6 @@ def spawn_container(args):
             # Store the current length of the container's log so then we can use it
             # as an index to continue logging the rest of the Xpra server's output.
             log_i = len(container.logs())
-            container_log += tmp_log
 
             # Run and attach the Xpra client to the Xpra server
             try:
@@ -234,53 +245,15 @@ def spawn_container(args):
                 client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
             except FileNotFoundError:
                 client_log += "[ERROR] `xpra` command was not found.\n"
-        else:
-            try:
-                for log in container.logs(stream=True):
-                    if type(log) is bytes:
-                        tmp_log += log.decode("utf8")
-                        print(log.decode("utf8"), end="")
-                    else:
-                        tmp_log += log
-                        print(log, end="")
-                    if tmp_log.endswith("Publicized address"):
-                        break
-            except KeyboardInterrupt:
-                client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
-
-        # Log both Gazebo's and Xpra server's output after client shutdown.
-        try:
-            tmp_log = container.logs()[log_i:]
-            # docker_client.containers.get(tag_name).remove(force=True)
-            client_log += "Succesfully stopped and removed running container.\n"
+            # Log both Gazebo's and Xpra server's output after client shutdown.
             # Convert tmp byte string to printable pretty string
-            for log in tmp_log:
+            for log in container.logs()[log_i:]:
                 container_log += chr(log)
-        except (docker.errors.NotFound, docker.errors.APIError):
-            client_log += "Container might have been force removed by user.\n"
-            client_log += "[ERROR] Container not found. Failed to log and remove.\n"
-    elif runtime == "nvidia":
-        run([
-            'nvidia-docker', 'run', '-itd', '--name=' + tag_name,
-            '--env="DISPLAY"', '--env="QT_X11_NO_MITSHM=1"',
-            '--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw"', tag_name,
-            'gazebo --verbose'
-        ])
-        logs = docker_client.containers.get(tag_name).logs(stream=True)
-        try:
-            for log in logs:
-                if type(log) is bytes:
-                    tmp_log += log.decode("utf8")
-                    print(log.decode("utf8"), end="")
-                else:
-                    tmp_log += log
-                    print(log, end="")
-                if tmp_log.endswith("Publicized address"):
-                    break
-        except KeyboardInterrupt:
-            client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
-
-    write_log(gzdev_path + tag_name + ".log", container_log + client_log)
+            write_log(gzdev_path + tag_name + ".log",
+                      container_log + client_log)
+        else:
+            log_nvidia_docker(docker_client, tag_name, gzdev_path,
+                              container_log, client_log)
 
 
 def main():
