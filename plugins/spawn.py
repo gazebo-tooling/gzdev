@@ -129,16 +129,8 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
-    # run("add-apt-repository -y ppa:graphics-drivers/ppa", shell=True)
-    # run("apt-get update && apt-get install -y wget nvidia-390 nvidia-modprobe",
-    # shell=True)
     # run("glxinfo -B", shell=True)
     # run("nvidia-smi", shell=True)
-    print("$DISPLAY is:")
-    run("echo $DISPLAY", shell=True)
-    run("export DISPLAY=:0.0", shell=True)
-    print("Now $DISPLAY is:")
-    run("echo $DISPLAY", shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
@@ -195,7 +187,7 @@ def spawn_container(args):
             stdin_open=True,
             tty=True,
             detach=True,
-            environment=["DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"],
+            environment=["DISPLAY=:0.0", "QT_X11_NO_MITSHM=1"],
             ports={'10000': 10000},
             volumes={'/tmp/.X11-unix': {
             'bind': '/tmp/.X11-unix',
