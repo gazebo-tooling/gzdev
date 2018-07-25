@@ -124,6 +124,7 @@ def write_log(log_path, log):
     run("ps aux | pgrep gazebo", shell=True)
     run("ps aux | grep gazebo", shell=True)
     run("ps aux", shell=True)
+    run("docker top gz8", shell=True)
     run("docker logs gz8", shell=True)
 
 
@@ -133,6 +134,11 @@ def spawn_container(args):
     # shell=True)
     # run("glxinfo -B", shell=True)
     # run("nvidia-smi", shell=True)
+    print("$DISPLAY is:")
+    run("echo $DISPLAY", shell=True)
+    run("DISPLAY=:0.0", shell=True)
+    print("Now $DISPLAY is:")
+    run("echo $DISPLAY", shell=True)
 
     gzv, ros, config, pr, confirm, nvidia = args
     gzv = str(gzv)
@@ -236,19 +242,19 @@ def spawn_container(args):
                 client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
             except FileNotFoundError:
                 client_log += "[ERROR] `xpra` command was not found.\n"
-        # else:
-        #     try:
-        #         for log in container.logs(stream=True):
-        #             if type(log) is bytes:
-        #                 tmp_log += log.decode("utf8")
-        #                 print(log.decode("utf8"), end="")
-        #             else:
-        #                 tmp_log += log
-        #                 print(log, end="")
-        #             if tmp_log.endswith("Publicized address"):
-        #                 break
-        # except KeyboardInterrupt:
-        #     client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
+        else:
+            try:
+                for log in container.logs(stream=True):
+                    if type(log) is bytes:
+                        tmp_log += log.decode("utf8")
+                        print(log.decode("utf8"), end="")
+                    else:
+                        tmp_log += log
+                        print(log, end="")
+                    if tmp_log.endswith("Publicized address"):
+                        break
+            except KeyboardInterrupt:
+                client_log += "Nvidia spawn stopped with a Keyboard Interrupt.\n"
 
         # Log both Gazebo's and Xpra server's output after client shutdown.
         try:
@@ -265,7 +271,6 @@ def spawn_container(args):
         run('nvidia-docker run --rm -itd --name=gz8 --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" gz8 gazebo --verbose',
             shell=True)
         logs = docker_client.containers.get(tag_name).logs(stream=True)
-        # TODO: Log nvidia-docker output
         try:
             for log in logs:
                 if type(log) is bytes:
