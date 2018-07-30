@@ -245,10 +245,15 @@ def spawn_container(args):
                 client_log += "Xpra was stopped with a Keyboard Interrupt.\n"
             except FileNotFoundError:
                 client_log += "[ERROR] `xpra` command was not found.\n"
+
             # Log both Gazebo's and Xpra server's output after client shutdown.
             # Convert tmp byte string to printable pretty string
-            for log in container.logs()[log_i:]:
-                container_log += chr(log)
+            if container:
+                for log in container.logs()[log_i:]:
+                    container_log += chr(log)
+                container.remove(force=True)
+                client_log += "Succesfully stopped and removed running container.\n"
+
             write_log(gzdev_path + tag_name + ".log",
                       container_log + client_log)
         else:
