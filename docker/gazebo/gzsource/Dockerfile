@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y $BASE_DEPENDENCIES
 RUN apt-get update && apt-get install -y $GAZEBO_BASE_DEPENDENCIES
 RUN apt-get update && apt-get install -y --no-install-recommends mercurial
 RUN apt-get update && apt-get install -y --no-install-recommends ruby
+RUN apt-get update && apt-get install -y --no-install-recommends libzmq3-dev
+RUN apt-get update && apt-get install -y --no-install-recommends uuid-dev
 RUN apt-get update && apt-get install -y python3-dev
 RUN apt-get update && apt-get install -y python3-pip
 RUN echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list
