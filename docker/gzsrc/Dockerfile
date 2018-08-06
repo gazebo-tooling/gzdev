@@ -31,14 +31,12 @@ RUN echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -
 RUN curl http://repo.ros2.org/repos.key | apt-key add -
 RUN apt-get update && apt-get install -y python3-colcon-common-extensions
 RUN pip3 install --upgrade setuptools vcstool
-RUN mkdir -p /tmp/gazebo/src && cd /tmp/gazebo && \
-	curl https://bitbucket.org/rosatamsen/gazebodistro/raw/default/gazebo${GZV}.yml \
-	-o Gazebo${GZV}.repos && vcs import src < Gazebo${GZV}.repos && \
-	colcon metadata add default https://raw.githubusercontent.com/colcon/colcon-metadata-repository/master/index.yaml && \
-	colcon metadata update
-RUN cd /tmp/gazebo && colcon build
-RUN bash -c ". install/local_setup.bash"
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /var/tmp/*
+ENV GZV $GZV
+WORKDIR /mnt/gazebo
+COPY pull_srcs.sh gz_xpra.sh /usr/bin/
+RUN chmod +x /usr/bin/pull_srcs.sh /usr/bin/gz_xpra.sh
+RUN echo ". /mnt/gazebo/install/local_setup.bash" >> /root/.bashrc
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN ["bash", "-c", "echo -e '#!/bin/bash\nxvfb-run -s \"-screen 0 1280x1024x24\" gazebo --verbose' > /usr/bin/xvfb-gazebo && chmod +x /usr/bin/xvfb-gazebo"]
 
 EXPOSE 10000
