@@ -155,11 +155,12 @@ def spawn_container(args):
     docker_build = docker_client.images.build
     docker_run = docker_client.containers.run
     runtime = None
-    cmd = None
+    cmd = ""
     container_log = "~~~ Container Log ~~~\n"
     client_log = "\n~~~ Client log ~~~\n\n"
     gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
     log_i = 0
+    src_volume = ""
 
     if source:
         run([
@@ -184,13 +185,15 @@ def spawn_container(args):
             "BASE_DEPENDENCIES": base_deps,
             "GAZEBO_BASE_DEPENDENCIES": gz_base_deps
         })
-        dockerfile += "gazebo/gzsource/"
+        dockerfile += "gzsrc/"
         tag_name += "_src"
+        src_volume = ' --volume=%sgazebo:/mnt/gazebo ' % gzdev_path
+        cmd = "colcon build && source /tmp/gazebo/install/local_setup.bash && "
 
     if nvidia:
         try:
             runtime = "nvidia"
-            cmd = "gazebo --verbose"
+            cmd += "gazebo --verbose"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
@@ -220,16 +223,20 @@ def spawn_container(args):
           "hardware accelerated graphics to your screen\n")
 
     if runtime == "nvidia":
-        run([
-            'nvidia-docker', 'run', '-itd', '--name=' + tag_name,
-            '--env=DISPLAY', '--env=QT_X11_NO_MITSHM=1',
-            '--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw', tag_name, 'gazebo',
-            '--verbose'
-        ])
+        nvidia_docker = ('nvidia-docker' + ' run' + ' -itd' + ' --name=' + \
+            tag_name + ' --env=DISPLAY' + ' --env=QT_X11_NO_MITSHM=1' + \
+            ' --volume=/tmp/.X11-unix:/tmp/.X11-unix:rw ' + src_volume +  \
+            tag_name + ' /bin/bash -c ').split() + [cmd]
+
+        client_log += run(nvidia_docker, stdout=PIPE, stderr=PIPE,
+                          universal_newlines=True).stdout
+
         log_nvidia_docker(docker_client, tag_name, gzdev_path, container_log,
                           client_log)
     elif not runtime:
         try:
+            if source and not nvidia:
+                cmd += "gz_xpra.sh"
             container = docker_run(
                 tag_name, command=cmd, stdin_open=True, tty=True, detach=True,
                 environment=[
