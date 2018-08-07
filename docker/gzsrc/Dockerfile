@@ -41,8 +41,8 @@ RUN apt-get update && apt-get install -y python3-colcon-common-extensions
 RUN pip3 install --upgrade setuptools vcstool
 ENV GZV $GZV
 WORKDIR /mnt/gazebo
-COPY gzrepos.sh gzxpra.sh gzxvfb.sh /usr/bin/
-RUN chmod +x /usr/bin/gzrepos.sh /usr/bin/gzxpra.sh /usr/bin/gzxvfb.sh
+COPY gzrepos.sh gzcolcon.sh gzxpra.sh gzxvfb.sh /usr/bin/
+RUN cd /usr/bin && chmod +x gzrepos.sh gzcolcon.sh gzxpra.sh gzxvfb.sh
 RUN echo ". /mnt/gazebo/install/local_setup.bash" >> /root/.bashrc
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
