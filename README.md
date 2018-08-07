@@ -67,6 +67,19 @@ Options:
 
 `gzdev spawn 9 --nvidia`
 
+When looking to build Gazebo from source first do the folllowing at the root of the gzdev directory:  
+`mkdir gazebo && cd gazebo`  
+`export GZV=9 && bash ../docker/gzsrc/gzrepos.sh`  
+
+*Notice that the $GZV environment variable specifies the Gazebo version #, and colcon, vcstool, and mercurial are required to run the script.  
+These can be installed with pip3:  
+`pip3 install colcon-common-extensions vcstool`  
+and pip (python2.7 version):  
+`pip install mercurial`
+
+Then the following command will build the docker image, mount the gazebo source code directory into the running container, compile from source, set up the environment, and finally run gazebo  
+`gzdev spawn 9 --source`
+
 # Support/Contribute
 * [GitHub Issue Tracker](https://github.com/osrf/gzdev/issues) - gzdev specific questions
 * [Gazebo Answers](http://answers.gazebosim.org) - Gazebo specific questions
