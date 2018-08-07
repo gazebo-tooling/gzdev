@@ -118,6 +118,15 @@ def print_spawn_msg(args):
     print("\n~~~ " + gz_msg + ros_msg + config_msg + pr_msg + " ~~~\n")
 
 
+def print_src_install_msgs(tag_name):
+    print("Access the container with the following command:")
+    print("     docker exec -it %s /bin/bash" % tag_name)
+    print("Once in the container:")
+    print("     - Pull all source code repos with: gzrepos.sh")
+    print("     - Then compile and run with verbose output using: gzcolcon.sh")
+    print("       or less output messages with: colcon build && gazebo")
+
+
 def log_nvidia_docker(docker_client, tag_name, path, container_log, client_log):
     try:
         container = docker_client.containers.get(tag_name)
@@ -161,6 +170,7 @@ def spawn_container(args):
     gzdev_path = dirname(realpath(__file__ + "/..")) + "/"
     log_i = 0
     src_volume = ""
+    xpra_volumes = {}
 
     if source:
         run([
@@ -188,12 +198,18 @@ def spawn_container(args):
         dockerfile += "gzsrc/"
         tag_name += "_src"
         src_volume = ' --volume=%sgazebo:/mnt/gazebo ' % gzdev_path
-        cmd = "colcon build && source /tmp/gazebo/install/local_setup.bash && "
+        xpra_volumes = {
+            gzdev_path + 'gazebo': {'bind': '/mnt/gazebo', 'mode': 'rw'}
+        }
+        cmd = None
+    else:
+        cmd = "gzxpra.sh"
 
     if nvidia:
         try:
             runtime = "nvidia"
-            cmd += "gazebo --verbose"
+            if not source:
+                cmd = "gazebo --verbose"
             client_log += run(["nvidia-docker", "version"], stdout=PIPE,
                               stderr=PIPE, universal_newlines=True).stdout
         except FileNotFoundError:
@@ -223,33 +239,46 @@ def spawn_container(args):
           "hardware accelerated graphics to your screen\n")
 
     if runtime == "nvidia":
+        if cmd is None:
+            cmd = []
+        else:
+            cmd = cmd.split()
+
         nvidia_docker = ('nvidia-docker' + ' run' + ' -itd' + ' --name=' + \
             tag_name + ' --env=DISPLAY' + ' --env=QT_X11_NO_MITSHM=1' + \
             ' --volume=/tmp/.X11-unix:/tmp/.X11-unix:rw ' + src_volume +  \
-            tag_name + ' /bin/bash -c ').split() + [cmd]
+            tag_name).split() + cmd
 
         client_log += run(nvidia_docker, stdout=PIPE, stderr=PIPE,
                           universal_newlines=True).stdout
+
+        if source:
+            print_src_install_msgs(tag_name)
+            exit()
 
         log_nvidia_docker(docker_client, tag_name, gzdev_path, container_log,
                           client_log)
     elif not runtime:
         try:
-            if source and not nvidia:
-                cmd += "gz_xpra.sh"
+            xpra_volumes.update(
+                {'/tmp/.X11-unix': {'bind': '/tmp/.X11-unix', 'mode': 'rw'}})
+
             container = docker_run(
                 tag_name, command=cmd, stdin_open=True, tty=True, detach=True,
                 environment=[
                     "DISPLAY=" + environ["DISPLAY"], "QT_X11_NO_MITSHM=1"
-                ], ports={'10000': 10000}, volumes={
-                    '/tmp/.X11-unix': {'bind': '/tmp/.X11-unix', 'mode': 'rw'}
-                }, name=tag_name, runtime=runtime)
+                ], ports={'10000': 10000}, volumes=xpra_volumes, name=tag_name,
+                runtime=runtime)
         except docker.errors.APIError as error:
             client_log += "[ERROR] " + error.explanation
             client_log += "Could not spawn docker container.\n"
             container_log += "NONE"
             write_log(gzdev_path + tag_name + ".log",
                       container_log + client_log)
+            exit()
+
+        if source:
+            print_src_install_msgs(tag_name)
             exit()
 
         # The following code ensures the xpra client does not attach to the
