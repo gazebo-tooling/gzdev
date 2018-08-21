@@ -19,7 +19,8 @@ RUN curl http://packages.osrfoundation.org/gazebo.key | apt-key add -
 RUN apt-get update && apt-get install -y xpra=2.3.*
 RUN apt-get update && apt-get install -y gazebo$GZV
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN ["bash", "-c", "echo -e '#!/bin/bash\nxvfb-run -s \"-screen 0 1280x1024x24\" gazebo --verbose' > /usr/bin/xvfb-gazebo && chmod +x /usr/bin/xvfb-gazebo"]
+COPY gzsrc/gzxpra.sh gzsrc/gzxvfb.sh /usr/bin/
+RUN chmod +x /usr/bin/gzxpra.sh /usr/bin/gzxvfb.sh
 
 EXPOSE 10000
 
@@ -33,8 +34,3 @@ ENV NVIDIA_VISIBLE_DEVICES \
 	${NVIDIA_VISIBLE_DEVICES:-all}
 ENV NVIDIA_DRIVER_CAPABILITIES \
 	${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
-
-CMD ["xpra", "start", ":100", "--start-child=gazebo --verbose", "--daemon=off",\
-	"--opengl=yes", "--bind-tcp=0.0.0.0:10000", "--mdns=no", "--av-sync=no",\
-	"--notifications=no", "--exit-with-children=yes", "--pulseaudio=no", \
-	"--exit-with-client=yes", "--printing=no", "--speaker=disabled"]
