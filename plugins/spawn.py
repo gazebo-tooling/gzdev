@@ -7,6 +7,7 @@ Usage:
 				[<config> | --config=<file_name>]
 				[<pr> | --pr=<number>]
 				[--dev | --source]
+                [--pull]
 				[--yes]
 				[--nvidia]
 	gzdev spawn -h | --help
@@ -57,13 +58,14 @@ def normalize_args(args):
     confirm = args["--yes"]
     nvidia = args["--nvidia"]
     source = args["--source"]
+    pull = args["--pull"]
 
     ros = ros.lower() if ros else None
     gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
     if gzv == None and ros and ros in official_ros_gzv:
         gzv = official_ros_gzv[ros]
 
-    return gzv, ros, config, pr, confirm, nvidia, source
+    return gzv, ros, config, pr, confirm, nvidia, source, pull
 
 
 def error(msg):
@@ -72,7 +74,7 @@ def error(msg):
 
 
 def validate_input(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull = args
 
     if type(gzv) is int and (gzv <= 0 or gzv > max_gzv) or type(gzv) is str:
         error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
@@ -100,7 +102,7 @@ def validate_input(args):
 
 
 def print_spawn_msg(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull = args
     gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
     if ros:
@@ -155,7 +157,7 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull = args
     gzv = str(gzv)
     tag_name = "gz" + gzv
     build_args = {"GZV": gzv}
@@ -201,7 +203,10 @@ def spawn_container(args):
         xpra_volumes = {
             gzdev_path + 'gazebo': {'bind': '/mnt/gazebo', 'mode': 'rw'}
         }
-        cmd = None
+        if pull:
+            cmd = "gzrepos.sh"
+        else:
+            cmd = None
     else:
         cmd = "gzxpra.sh"
 
