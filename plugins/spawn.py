@@ -21,10 +21,12 @@ Options:
 	--ros=<distro_name>     ROS distribution name
 	--config=<file_name>    World configuration file
 	--pr=<number>           Branch to compile from based on Pull Request #
-	--dev                   Install Gazebo development libraries
-	--source                Build Gazebo/ROS from source
+	--dev                   Install development libraries
+	--source                Set up development environment and dependencies
+	--pull                  Pull all the official source code repositories
+	--build                 Compile and install everything from source
 	--yes                   Confirm selection of unofficial ROS + Gazebo version
-	--nvidia                Select nvidia as the runtime for the container.
+	--nvidia                Select nvidia as the runtime for the container
 
 """
 
