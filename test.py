@@ -7,7 +7,7 @@ from plugins import spawn
 argv = {
     "<gzv>": None, "<ros>": None, "<config>": None, "<pr>": None, "--gzv": None,
     "--ros": None, "--config": None, "--pr": None, "--yes": None,
-    "--nvidia": None, "--source": None, "--pull": None
+    "--nvidia": None, "--source": None, "--pull": None, "--build": None
 }
 
 run_code = {}
