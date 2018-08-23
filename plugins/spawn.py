@@ -125,9 +125,11 @@ def print_spawn_msg(args):
 
 
 def print_src_install_msgs(tag_name):
-    print("Access the container with the following command:")
-    print("     docker exec -it %s /bin/bash" % tag_name)
-    print("Once in the container:")
+    print("To display --pull or --build output use:")
+    print("     docker logs %s -f\n" % tag_name)
+    print("Access the container with:")
+    print("     docker exec -it %s /bin/bash\n" % tag_name)
+    print("The following scripts are also available inside the container:")
     print("     - Pull all source code repos with: gzrepos.sh")
     print("     - Then compile and run with verbose output using: gzcolcon.sh")
     print("       or less output messages with: colcon build && gazebo")
@@ -207,12 +209,18 @@ def spawn_container(args):
         xpra_volumes = {
             gzdev_path + 'gazebo': {'bind': '/mnt/gazebo', 'mode': 'rw'}
         }
-        if pull:
-            cmd = "gzrepos.sh"
+
+        cmd = ["/bin/bash", "-c", ""]
+        if pull and build:
+            cmd[2] = "gzrepos.sh && gzcolcon.sh;"
+        elif pull:
+            cmd[2] = "gzrepos.sh;"
         elif build:
-            cmd = "gzcolcon.sh"
-        else:
-            cmd = None
+            cmd[2] = "gzcolcon.sh;"
+        # The my_init script keeps the container running so that the user
+        # can go in and out of it as the please using docker exec
+        cmd[2] += "/sbin/my_init"
+
     else:
         cmd = "gzxpra.sh"
 
@@ -281,7 +289,7 @@ def spawn_container(args):
                 ], ports={'10000': 10000}, volumes=xpra_volumes, name=tag_name,
                 runtime=runtime)
         except docker.errors.APIError as error:
-            client_log += "[ERROR] " + error.explanation
+            client_log += "[ERROR] " + error.explanation.decode("utf8")
             client_log += "Could not spawn docker container.\n"
             container_log += "NONE"
             write_log(gzdev_path + tag_name + ".log",
