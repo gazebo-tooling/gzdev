@@ -2,27 +2,31 @@
 # Licensed under the Apache License, Version 2.0
 """
 Usage:
-	gzdev spawn [<gzv> | --gzv=<number>]
-				[<ros> | --ros=<distro_name>]
-				[<config> | --config=<file_name>]
-				[<pr> | --pr=<number>]
-				[--dev | --source]
-				[--yes]
-				[--nvidia]
-	gzdev spawn -h | --help
-	gzdev spawn --version
+    gzdev spawn [<gzv> | --gzv=<number>]
+                [<ros> | --ros=<distro_name>]
+                [<config> | --config=<file_name>]
+                [<pr> | --pr=<number>]
+                [--dev | --source]
+                [--pull]
+                [--build]
+                [--yes]
+                [--nvidia]
+    gzdev spawn -h | --help
+    gzdev spawn --version
 
 Options:
-	-h --help               Show this screen
-	--version               Show gzdev's version
-	--gzv=<number>          Gazebo release version number
-	--ros=<distro_name>     ROS distribution name
-	--config=<file_name>    World configuration file
-	--pr=<number>           Branch to compile from based on Pull Request #
-	--dev                   Install Gazebo development libraries
-	--source                Build Gazebo/ROS from source
-	--yes                   Confirm selection of unofficial ROS + Gazebo version
-	--nvidia                Select nvidia as the runtime for the container.
+    -h --help               Show this screen
+    --version               Show gzdev's version
+    --gzv=<number>          Gazebo release version number
+    --ros=<distro_name>     ROS distribution name
+    --config=<file_name>    World configuration file
+    --pr=<number>           Branch to compile from based on Pull Request #
+    --dev                   Install development libraries
+    --source                Set up development environment and dependencies
+    --pull                  Pull all the official source code repositories
+    --build                 Compile and install everything from source
+    --yes                   Confirm selection of unofficial ROS + Gazebo version
+    --nvidia                Select nvidia as the runtime for the container
 
 """
 
@@ -57,13 +61,15 @@ def normalize_args(args):
     confirm = args["--yes"]
     nvidia = args["--nvidia"]
     source = args["--source"]
+    pull = args["--pull"]
+    build = args["--build"]
 
     ros = ros.lower() if ros else None
     gzv = int(gzv) if gzv and gzv.isdecimal() else gzv
     if gzv == None and ros and ros in official_ros_gzv:
         gzv = official_ros_gzv[ros]
 
-    return gzv, ros, config, pr, confirm, nvidia, source
+    return gzv, ros, config, pr, confirm, nvidia, source, pull, build
 
 
 def error(msg):
@@ -72,7 +78,7 @@ def error(msg):
 
 
 def validate_input(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull, build = args
 
     if type(gzv) is int and (gzv <= 0 or gzv > max_gzv) or type(gzv) is str:
         error("ERROR: '%s' is not a valid Gazebo version number." % gzv)
@@ -100,7 +106,7 @@ def validate_input(args):
 
 
 def print_spawn_msg(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull, build = args
     gz_msg, ros_msg, config_msg, pr_msg = ("", "", "", "")
 
     if ros:
@@ -119,9 +125,11 @@ def print_spawn_msg(args):
 
 
 def print_src_install_msgs(tag_name):
-    print("Access the container with the following command:")
-    print("     docker exec -it %s /bin/bash" % tag_name)
-    print("Once in the container:")
+    print("To display --pull or --build output use:")
+    print("     docker logs %s -f\n" % tag_name)
+    print("Access the container with:")
+    print("     docker exec -it %s /bin/bash\n" % tag_name)
+    print("The following scripts are also available inside the container:")
     print("     - Pull all source code repos with: gzrepos.sh")
     print("     - Then compile and run with verbose output using: gzcolcon.sh")
     print("       or less output messages with: colcon build && gazebo")
@@ -155,7 +163,7 @@ def write_log(log_path, log):
 
 
 def spawn_container(args):
-    gzv, ros, config, pr, confirm, nvidia, source = args
+    gzv, ros, config, pr, confirm, nvidia, source, pull, build = args
     gzv = str(gzv)
     tag_name = "gz" + gzv
     build_args = {"GZV": gzv}
@@ -201,7 +209,18 @@ def spawn_container(args):
         xpra_volumes = {
             gzdev_path + 'gazebo': {'bind': '/mnt/gazebo', 'mode': 'rw'}
         }
-        cmd = None
+
+        cmd = ["/bin/bash", "-c", ""]
+        if pull and build:
+            cmd[2] = "gzrepos.sh && gzcolcon.sh;"
+        elif pull:
+            cmd[2] = "gzrepos.sh;"
+        elif build:
+            cmd[2] = "gzcolcon.sh;"
+        # The my_init script keeps the container running so that the user
+        # can go in and out of it as the please using docker exec
+        cmd[2] += "/sbin/my_init"
+
     else:
         cmd = "gzxpra.sh"
 
@@ -270,7 +289,7 @@ def spawn_container(args):
                 ], ports={'10000': 10000}, volumes=xpra_volumes, name=tag_name,
                 runtime=runtime)
         except docker.errors.APIError as error:
-            client_log += "[ERROR] " + error.explanation
+            client_log += "[ERROR] " + error.explanation.decode("utf8")
             client_log += "Could not spawn docker container.\n"
             container_log += "NONE"
             write_log(gzdev_path + tag_name + ".log",
