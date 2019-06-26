@@ -1,5 +1,4 @@
 ---
-
 repositories:
     - name: osrf
       key: D2486D2DD83DB69272AFE98867170598AF249743
@@ -8,20 +7,29 @@ repositories:
             url: http://packages.osrfoundation.org/gazebo/ubuntu-stable
           - name: prerelease
             url: http://packages.osrfoundation.org/gazebo/ubuntu-prerelease
-          - name: prerelease
-            url: http://packages.osrfoundation.org/gazebo/ubuntu-prerelease
+          - name: nightly
+            url: http://packages.osrfoundation.org/gazebo/ubuntu-nightly
 
 # wildcards are allowed in name, entries are processed in top-down order
 projects:
-    - name: ignition-math6
+    - name: ignition-gazebo.*
+      repositories:
+          - name: osrf
+            type: prerelease
+    - name: ignition-launch.*
+      repositories:
+          - name: osrf
+            type: prerelease
+    # generic regexp
+    - name: gazebo.*
       repositories:
           - name: osrf
             type: stable
-    - name: ignition-transport7
-      repositories:
-          - name: osrf
-            type: prerelease
     - name: ignition-.*
       repositories:
           - name: osrf
-            type: prerelease
+            type: stable
+    - name: sdformat.*
+      repositories:
+          - name: osrf
+            type: stable
