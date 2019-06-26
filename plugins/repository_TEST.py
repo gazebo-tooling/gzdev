@@ -3,7 +3,7 @@ import repository
 
 class TestBase(unittest.TestCase):
     def setUp(self):
-        self.config = repository.load_config_file('plugins/config/_test_repository.yaml')
+        self.config = repository.load_config_file('config/_test_repository.yaml')
 
 class TestBasicOperations(TestBase):
     def test_config_file_path(self):

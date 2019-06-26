@@ -24,6 +24,7 @@ from os.path import dirname, realpath, isfile, join
 import re
 from subprocess import run, PIPE, CalledProcessError, check_call
 from sys import stderr
+import pathlib
 import platform
 import yaml
 
@@ -43,8 +44,9 @@ def error(msg):
     print("\n" + msg + "\n", file=stderr)
     exit(-1)
 
-def load_config_file(config_file_path = 'plugins/config/repository.yaml'):
-    with open(config_file_path, 'r') as stream:
+def load_config_file(config_file_path = 'config/repository.yaml'):
+    fn = pathlib.Path(__file__).parent / config_file_path
+    with open(str(fn), 'r') as stream:
         try:
             config = yaml.safe_load(stream)
             return config
