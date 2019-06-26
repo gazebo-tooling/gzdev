@@ -15,9 +15,13 @@ projects:
     - name: ignition-gazebo.*
       repositories:
           - name: osrf
+            type: stable
+          - name: osrf
             type: prerelease
     - name: ignition-launch.*
       repositories:
+          - name: osrf
+            type: stable
           - name: osrf
             type: prerelease
     # generic regexp

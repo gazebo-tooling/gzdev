@@ -18,6 +18,8 @@ projects:
     - name: ignition-transport7
       repositories:
           - name: osrf
+            type: stable
+          - name: osrf
             type: prerelease
     - name: ignition-.*
       repositories:

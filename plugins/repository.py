@@ -54,22 +54,15 @@ def load_config_file(config_file_path = 'config/repository.yaml'):
             exit(-1)
 
 def load_project(project, config):
-    repo_name = None
-    repo_type = None
-
     for p in config['projects']:
         pattern = re.compile(p['name'])
         if pattern.search(project):
-           # TODO: support for multiple repositories
-           repo_name = p['repositories'][0]['name']
-           repo_type = p['repositories'][0]['type']
-           # stop in the first match
-           break
+            return p['repositories']
+            # stop in the first match
+            break
 
-    if not repo_name:
-        error("Unknown project: " + project)
+    error("Unknown project: " + project)
 
-    return repo_name, repo_type
 
 def get_platform():
     return platform.linux_distribution()[2]
@@ -101,6 +94,10 @@ def install_key(key):
 
 def run_apt_update():
     _check_call(['apt-get','update'])
+
+def install_repos(projects_list, config):
+    for p in project_list:
+        install_repo(p['name'], p['type'], config)
 
 def install_repo(repo_name, repo_type, config):
     url = get_repo_url(repo_name, repo_type, config)
@@ -145,9 +142,10 @@ def process_input(args, config):
     action, repo_name, repo_type, project = args
 
     if project:
-        repo_name, repo_type = load_project(project, config)
+        project_list = load_project(project, config)
 
     if (action == "enable"):
+        install_repos(project_list)
         install_repo(repo_name, repo_type, config)
     elif (action == "disable"):
         disable_repo(repo_name)

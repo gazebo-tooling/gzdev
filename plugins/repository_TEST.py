@@ -31,18 +31,20 @@ class TestRepo_URL(TestBase):
 
 class TestProjectNameResolution(TestBase):
     def test_direct_match(self):
-        repo_name, repo_type = repository.load_project("ignition-math6", self.config)
-        self.assertEqual(repo_name, 'osrf')
-        self.assertEqual(repo_type, 'stable')
+        projects = repository.load_project("ignition-math6", self.config)
+        for p in projects:
+            self.assertEqual(p['name'], 'osrf')
+            self.assertEqual(p['type'], 'stable')
 
     def test_non_exist(self):
         with self.assertRaises(SystemExit) as cm:
-            repo_name, repo_type = repository.load_project("fooooo", self.config)
+            projects = repository.load_project("fooooo", self.config)
 
     def test_regexp(self):
-        repo_name, repo_type = repository.load_project("ignition-plugin", self.config)
-        self.assertEqual(repo_name, 'osrf')
-        self.assertEqual(repo_type, 'regexp')
+        projects = repository.load_project("ignition-plugin", self.config)
+        for p in projects:
+            self.assertEqual(p['name'], 'osrf')
+            self.assertEqual(p['type'], 'regexp')
 
 
 if __name__ == '__main__':
