@@ -1,0 +1,27 @@
+---
+
+repositories:
+    - name: osrf
+      key: D2486D2DD83DB69272AFE98867170598AF249743
+      types:
+          - name: stable
+            url: http://packages.osrfoundation.org/gazebo/ubuntu-stable
+          - name: prerelease
+            url: http://packages.osrfoundation.org/gazebo/ubuntu-prerelease
+          - name: prerelease
+            url: http://packages.osrfoundation.org/gazebo/ubuntu-prerelease
+
+# wildcards are allowed in name, entries are processed in top-down order
+projects:
+    - name: ignition-math6
+      repositories:
+          - name: osrf
+            type: stable
+    - name: ignition-transport7
+      repositories:
+          - name: osrf
+            type: prerelease
+    - name: ignition-.*
+      repositories:
+          - name: osrf
+            type: prerelease

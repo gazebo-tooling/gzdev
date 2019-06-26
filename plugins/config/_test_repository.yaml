@@ -1,0 +1,25 @@
+---
+
+repositories:
+    - name: osrf
+      key: ABC1234567890
+      types:
+          - name: stable
+            url: http://stable
+          - name: prerelease
+            url: http://prerelease
+
+# wildcards are allowed in name, entries are processed in top-down order
+projects:
+    - name: ignition-math6
+      repositories:
+          - name: osrf
+            type: stable
+    - name: ignition-transport7
+      repositories:
+          - name: osrf
+            type: prerelease
+    - name: ignition-.*
+      repositories:
+          - name: osrf
+            type: regexp
