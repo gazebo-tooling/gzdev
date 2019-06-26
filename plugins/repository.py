@@ -32,13 +32,12 @@ def _check_call(cmd):
     print('')
     print("Invoking '%s'" % ' '.join(cmd))
     print('')
+    stdout.flush()
 
     try:
         check_call(cmd)
     except Exception as e:
         print(str(e))
-
-    print('')
 
 def error(msg):
     print("\n" + msg + "\n", file=stderr)
