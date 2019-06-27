@@ -32,7 +32,6 @@ def _check_call(cmd):
     print('')
     print("Invoking '%s'" % ' '.join(cmd))
     print('')
-    stdout.flush()
 
     try:
         check_call(cmd)
