@@ -95,7 +95,7 @@ def install_key(key):
 def run_apt_update():
     _check_call(['apt-get','update'])
 
-def install_repos(projects_list, config):
+def install_repos(project_list, config):
     for p in project_list:
         install_repo(p['name'], p['type'], config)
 
