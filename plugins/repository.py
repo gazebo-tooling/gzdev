@@ -145,8 +145,7 @@ def process_input(args, config):
         project_list = load_project(project, config)
 
     if (action == "enable"):
-        install_repos(project_list)
-        install_repo(repo_name, repo_type, config)
+        install_repos(project_list, config)
     elif (action == "disable"):
         disable_repo(repo_name)
 
