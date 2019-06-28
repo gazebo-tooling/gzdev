@@ -35,6 +35,33 @@ Commands/Plugins:
 	spawn          Spawn a virtual environment ready for development.
 ```
 
+## repository
+```
+System operations to manage extra repositories affecting Gazebo/ROS
+
+Usage:
+	gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>]
+        gzdev repository list
+	gzdev repository (-h | --help)
+	gzdev repository --version
+Action:
+        enable                  Enable repository in the system
+        disable                 Disable repository (if present)
+        list                    List repositories enabled
+Options:
+	-h --help               Show this screen
+	--version               Show gzdev's version
+"""
+```
+## Basic examples
+`gzdev repository enable osrf prerelease`
+
+## Per project configuration
+Some projects require prerelease or nigthly repositories in order to work in early
+stages.
+
+`gzdev repository enable --project=ignition-math6`
+
 ## spawn
 ```
 Spawn various Gazebo versions and ROS distributions inside docker containers.
@@ -79,6 +106,7 @@ and pip (python2.7 version):
 
 Then the following command will build the docker image, mount the gazebo source code directory into the running container, compile from source, set up the environment, and finally run gazebo  
 `gzdev spawn 9 --source`
+
 
 # Support/Contribute
 * [GitHub Issue Tracker](https://github.com/osrf/gzdev/issues) - gzdev specific questions
