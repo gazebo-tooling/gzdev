@@ -109,6 +109,7 @@ def install_repo(repo_name, repo_type, config):
 
     if isfile(full_path):
         warn("gzdev file with the repositoy already exists in the system")
+        warn("[" + full_path + "]")
         return
 
     install_key(key)
