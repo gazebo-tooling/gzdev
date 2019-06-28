@@ -144,11 +144,12 @@ def validate_input(args, config):
 def process_input(args, config):
     action, repo_name, repo_type, project = args
 
-    if project:
-        project_list = load_project(project, config)
-
     if (action == "enable"):
-        install_repos(project_list, config)
+        if project:
+            project_list = load_project(project, config)
+            install_repos(project_list, config)
+        else:
+            install_repo(repo_name, repo_type, config)
     elif (action == "disable"):
         disable_repo(repo_name)
 
