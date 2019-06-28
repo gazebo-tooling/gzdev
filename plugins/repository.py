@@ -39,8 +39,11 @@ def _check_call(cmd):
         print(str(e))
 
 def error(msg):
-    print("\n" + msg + "\n", file=stderr)
+    print("\n [err] " + msg + "\n", file=stderr)
     exit(-1)
+
+def warn(msg):
+    print("\n [warn] " + msg + "\n", file=stderr)
 
 def load_config_file(config_file_path = 'config/repository.yaml'):
     fn = pathlib.Path(__file__).parent / config_file_path
@@ -105,7 +108,8 @@ def install_repo(repo_name, repo_type, config):
     full_path = get_sources_list_file_path(repo_name, repo_type)
 
     if isfile(full_path):
-        error("gzdev file with the repositoy already exists in the system")
+        warn("gzdev file with the repositoy already exists in the system")
+        return
 
     install_key(key)
 
