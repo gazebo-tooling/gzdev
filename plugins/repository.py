@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 """
 Usage:
-	gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>]
+	gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>] [--force-linux-distro=<distro>]
         gzdev repository list
 	gzdev repository (-h | --help)
 	gzdev repository --version
@@ -120,14 +120,17 @@ def install_key(key):
 def run_apt_update():
     _check_call(['apt-get','update'])
 
-def install_repos(project_list, config):
+def install_repos(project_list, config, linux_distro):
     for p in project_list:
-        install_repo(p['name'], p['type'], config)
+        install_repo(p['name'], p['type'], config, linux_distro)
 
-def install_repo(repo_name, repo_type, config):
+def install_repo(repo_name, repo_type, config, linux_distro):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
-    content = "deb " + url + " " + get_linux_distro_version() + " main\n"
+    # if not linux_distro provided, try to guess it
+    if not linux_distro:
+        linux_distro = get_linux_distro_version()
+    content = "deb " + url + " " + linux_distro + " main\n"
     full_path = get_sources_list_file_path(repo_name, repo_type)
 
     if isfile(full_path):
@@ -153,11 +156,16 @@ def normalize_args(args):
     repo_name = args["<repo-name>"] if args["<repo-name>"] else "osrf"
     repo_type = args["<repo-type>"] if args["<repo-type>"] else "stable"
     project = args["--project"]
+    force_linux_distro = args["--force-linux-distro"]
+    if force_linux_distro:
+        linux_distro = force_linux_distro
+    else:
+        linux_distro = None
 
-    return action, repo_name, repo_type, project
+    return action, repo_name, repo_type, project, linux_distro
 
 def validate_input(args, config):
-    action, repo_name, repo_type, project = args
+    action, repo_name, repo_type, project, force_linux_distro = args
 
     if (action == "enable" or action == "disable" or action =="list"):
         True
@@ -165,14 +173,14 @@ def validate_input(args, config):
         error("Unknown action: " + action)
 
 def process_input(args, config):
-    action, repo_name, repo_type, project = args
+    action, repo_name, repo_type, project, linux_distro = args
 
     if (action == "enable"):
         if project:
             project_list = load_project(project, config)
-            install_repos(project_list, config)
+            install_repos(project_list, config, linux_distro)
         else:
-            install_repo(repo_name, repo_type, config)
+            install_repo(repo_name, repo_type, config, linux_distro)
     elif (action == "disable"):
         disable_repo(repo_name)
 
