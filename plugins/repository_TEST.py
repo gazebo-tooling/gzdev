@@ -19,7 +19,7 @@ class TestRepo_URL(TestBase):
     def test_basic_ok(self):
         self.assertEqual(
                 repository.get_repo_url('osrf','prerelease', self.config),
-                'http://prerelease')
+                'http://prerelease-' + repository.get_linux_distro())
 
     def test_no_repo(self):
         with self.assertRaises(SystemExit) as cm:
