@@ -43,6 +43,7 @@ repositories:
 
 # wildcards are allowed in name, entries are processed in top-down order
 projects:
+    # custom projects
     - name: ignition-gazebo.*
       repositories:
           - name: osrf-testing
@@ -50,6 +51,12 @@ projects:
           - name: osrf-testing
             type: prerelease
     - name: ignition-launch.*
+      repositories:
+          - name: osrf-testing
+            type: stable
+          - name: osrf-testing
+            type: prerelease
+    - name: sdformat8
       repositories:
           - name: osrf-testing
             type: stable
