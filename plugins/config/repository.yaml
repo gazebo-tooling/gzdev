@@ -56,12 +56,6 @@ projects:
             type: stable
           - name: osrf-testing
             type: prerelease
-    - name: sdformat8
-      repositories:
-          - name: osrf-testing
-            type: stable
-          - name: osrf-testing
-            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
