@@ -22,6 +22,7 @@ repositories:
             url: http://packages.osrfoundation.org/gazebo/debian-nightly
 
 # wildcards are allowed in name, entries are processed in top-down order
+# first entry matching the name is used
 projects:
     # custom projects
     - name: ignition-gazebo.*
