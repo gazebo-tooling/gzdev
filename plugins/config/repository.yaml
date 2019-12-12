@@ -24,73 +24,13 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
-    # custom projects
-    - name: ignition-tools1
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-rendering3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-transport8
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-gui3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-msgs5
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-launch2
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: sdformat9
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-fuel-tools4
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-sensors3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-physics2
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
-    - name: ignition-gazebo3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
+    # custom projects (example)
+    #   - name: ignition-gazebo3
+    #  repositories:
+    #      - name: osrf
+    #        type: stable
+    #      - name: osrf
+    #        type: prerelease
 
     # generic regexp
     - name: gazebo.*
