@@ -25,6 +25,12 @@ repositories:
 # first entry matching the name is used
 projects:
     # custom projects
+    - name: gazebo11
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     - name: ignition-tools1
       repositories:
           - name: osrf
