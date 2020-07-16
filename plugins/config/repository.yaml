@@ -31,6 +31,71 @@ projects:
             type: stable
           - name: osrf
             type: prerelease
+    # Use prerelease + nightly in all dome new major versions
+    - name: ignition-gazebo4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-fuel-tools5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-gui4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-physics3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-rendering4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-sensors4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-transport9
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-launch3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
 
     # generic regexp
     - name: gazebo.*
