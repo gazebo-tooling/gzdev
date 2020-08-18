@@ -31,6 +31,12 @@ projects:
             type: stable
           - name: osrf
             type: prerelease
+    # needs sdformat 9.3 prerelease, remove after 9.3 stable release
+    - name: ignition-physics2
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     # Use prerelease + nightly in all dome new major versions
     - name: ignition-gazebo4
       repositories:
