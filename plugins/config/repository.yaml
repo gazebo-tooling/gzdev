@@ -32,6 +32,11 @@ projects:
           - name: osrf
             type: prerelease
     # needs sdformat 9.3 prerelease, remove after 9.3 stable release
+    - name: gazebo11
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     - name: ignition-physics2
       repositories:
           - name: osrf
