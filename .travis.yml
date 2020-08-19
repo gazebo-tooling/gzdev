@@ -8,3 +8,4 @@ install:
 script:
   - pytest -sv test.py
   - python3 plugins/*_TEST.py
+  - python3 gzdev.py repository list
