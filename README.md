@@ -1,4 +1,4 @@
-# gzdev [![Build Status](https://travis-ci.org/osrf/gzdev.svg?branch=master)](https://travis-ci.org/osrf/gzdev) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
+# gzdev [![Build Status](https://travis-ci.org/ignition-tooling/gzdev.svg?branch=master)](https://travis-ci.org/ignition-tooling/gzdev) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
 gzdev is a command line tool that facilitates the development of the open source robotics simulator Gazebo. The tool aims to streamline many of the usual tasks that Gazebo developers face on a daily basis.
 
 # Installation
@@ -8,7 +8,7 @@ gzdev is a command line tool that facilitates the development of the open source
 * [Xpra](https://www.xpra.org/trac/wiki/Download) - Multi-platform screen and application forwarding system a.k.a. screen for X11. Required for Mac OS X and Windows, but optional for Linux
 
 1. Clone the repository  
-`git clone https://github.com/osrf/gzdev.git && cd gzdev`
+`git clone https://github.com/ignition-tooling/gzdev.git && cd gzdev`
 
 2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional)  
 `pip3 install -r requirements.txt`
@@ -109,7 +109,7 @@ Then the following command will build the docker image, mount the gazebo source 
 
 
 # Support/Contribute
-* [GitHub Issue Tracker](https://github.com/osrf/gzdev/issues) - gzdev specific questions
+* [GitHub Issue Tracker](https://github.com/ignition-tooling/gzdev/issues) - gzdev specific questions
 * [Gazebo Answers](http://answers.gazebosim.org) - Gazebo specific questions
 * [Gazebo Community](https://community.gazebosim.org) - General Discussion
 
