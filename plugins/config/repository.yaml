@@ -24,6 +24,55 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
+    # Use prerelease + nightly in all edifice new major versions
+    - name: ignition-edifice
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-gazebo5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-gui5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-rendering5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-sensors5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-launch4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
