@@ -3,3 +3,5 @@ docker==3.4.0
 docopt==0.6.2
 pytest==3.6.2
 pyyaml
+rocker
+git+https://github.com/adlarkin/ign-rocker.git@initial_proposal#egg=ign-rocker
