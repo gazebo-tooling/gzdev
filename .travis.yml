@@ -1,11 +1,13 @@
-dist: xenial
+dist: bionic
 language: python
 python:
-  - "3.5"
   - "3.6"
+  - "3.8"
 install:
   - pip install -r requirements.txt
 script:
   - pytest -sv test.py
   - python3 plugins/*_TEST.py
   - python3 gzdev.py repository list
+  - python3 ign-docker-env citadel
+  - python3 ign-docker-env dome --linux-distro ubuntu:bionic
