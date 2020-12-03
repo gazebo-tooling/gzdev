@@ -65,6 +65,7 @@ def build_rocker_command(igniton_release, linux_distro, docker_args):
     cmd = ROCKER_CMD + ['--nvidia'] if detect_nvidia() else ROCKER_CMD
     cmd += ['--ignition', f"{igniton_release}:{linux_distro_release}"]
     cmd += docker_args if docker_args else []
+    cmd += ['--']
     cmd += [linux_distro, '/bin/bash']
     return cmd
 
@@ -79,7 +80,7 @@ def normalize_args(args):
     else:
         linux_distro = default_distro_by_ignition(ignition_version)
 
-    docker_args = [args['--docker-args']] if args['--docker-args'] else None
+    docker_args = args['--docker-args'].split(' ') if args['--docker-args'] else None
 
     return ignition_version, linux_distro, docker_args
 
