@@ -61,8 +61,9 @@ def default_distro_by_ignition(ignition_release):
 
 
 def build_rocker_command(igniton_release, linux_distro, docker_args):
+    _, linux_distro_release = linux_distro.split(':')
     cmd = ROCKER_CMD + ['--nvidia'] if detect_nvidia() else ROCKER_CMD
-    cmd += ['--ignition', f"{igniton_release}:{linux_distro}"]
+    cmd += ['--ignition', f"{igniton_release}:{linux_distro_release}"]
     cmd += docker_args if docker_args else []
     cmd += [linux_distro, '/bin/bash']
     return cmd
