@@ -35,6 +35,29 @@ Commands/Plugins:
 	spawn          Spawn a virtual environment ready for development.
 ```
 
+## ign-docker-env
+```
+Launch docker enviroments ready for Ignition development
+
+Usage:
+    gzdev ign-docker-env IGN_RELEASE
+                [--linux-distro <linux-distro>]
+                [--docker-args DOCKER_ARGS]
+    gzdev ign-docker-env -h | --help
+    gzdev ign-docker-env --version
+
+Options:
+    -h --help                   Show this screen
+    --version                   Show gzdev's version
+    --linux-distro=linux-distro Linux distibution to use in docker env
+    --docker-args DOCKER_ARGS   Extra arguments to pass to docker
+```
+
+## Basic examples
+`gzdev.py ign-docker-env citadel`
+`gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic`
+`gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic --docker-args`
+
 ## repository
 ```
 System operations to manage extra repositories affecting Gazebo/ROS
@@ -51,7 +74,6 @@ Action:
 Options:
 	-h --help               Show this screen
 	--version               Show gzdev's version
-"""
 ```
 ## Basic examples
 `gzdev repository enable osrf prerelease`
