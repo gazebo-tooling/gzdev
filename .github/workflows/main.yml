@@ -39,4 +39,4 @@ jobs:
           python3 gzdev.py repository list
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic
-          python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:focak --docker-args '--vol /tmp:/tmp'
+          python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:focal --docker-args '--vol /tmp:/tmp'
