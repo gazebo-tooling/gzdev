@@ -7,13 +7,13 @@ gzdev is a command line tool that facilitates the development of the open source
 * [Python](https://www.python.org/downloads/) - Version 3.5 or greater recommended
 * [Xpra](https://www.xpra.org/trac/wiki/Download) - Multi-platform screen and application forwarding system a.k.a. screen for X11. Required for Mac OS X and Windows, but optional for Linux
 
-1. Clone the repository  
+1. Clone the repository
 `git clone https://github.com/osrf/gzdev.git && cd gzdev`
 
-2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional)  
+2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional)
 `pip3 install -r requirements.txt`
 
-3. Create an alias pointing to the core python script and add it to your ~/.bashrc  
+3. Create an alias pointing to the core python script and add it to your ~/.bashrc
 `alias gzdev=`/full/path/to/`gzdev.py`
 
 # Usage
@@ -43,14 +43,16 @@ Usage:
     gzdev ign-docker-env IGN_RELEASE
                 [--linux-distro <linux-distro>]
                 [--rocker-args DOCKER_ARGS]
+                [--vol $LOCAL_PATH:$CONTAINER_PATH[::$LOCAL_PATH:$CONTAINER_PATH ...]]
     gzdev ign-docker-env -h | --help
     gzdev ign-docker-env --version
 
 Options:
-    -h --help                   Show this screen
-    --version                   Show gzdev's version
-    --linux-distro=linux-distro Linux distibution to use in docker env
-    --rocker-args DOCKER_ARGS   Extra arguments to pass to docker
+    -h --help                           Show this screen
+    --version                           Show gzdev's version
+    --linux-distro linux-distro         Linux distibution to use in docker env
+    --rocker-args DOCKER_ARGS           Extra arguments to pass to docker
+    --vol $LOCAL_PATH:$CONTAINER_PATH   Load volumes into Docker container (separate multiple volumes with '::')
 ```
 
 ## Basic examples
@@ -58,6 +60,7 @@ Options:
 * Start an Ubuntu Bionic container with Ignition Dome installed: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic`
 * Start an Ubuntu Bionic container with Ignition Dome installed, passing in `/foo` locally as a volume into the container at `/bar`: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic --rocker-args '-v /foo:/bar'`
 * Start a container with user $HOME inside the container (among other things, this will allow dotfiles to be available in the container). It can potentially conflict with --vol argument: `gzdev ign-docker-env dome --rocker-args '--home'`
+* Start a container with Citadel installed, loading your local files at `/foo` into the container at `/bar`: `gzdev ign-docker-env citadel --vol /foo:/bar`
 
 ## repository
 ```
@@ -117,17 +120,17 @@ Options:
 
 `gzdev spawn 9 --nvidia`
 
-When looking to build Gazebo from source first do the folllowing at the root of the gzdev directory:  
-`mkdir gazebo && cd gazebo`  
-`export GZV=9 && bash ../docker/gzsrc/gzrepos.sh`  
+When looking to build Gazebo from source first do the folllowing at the root of the gzdev directory:
+`mkdir gazebo && cd gazebo`
+`export GZV=9 && bash ../docker/gzsrc/gzrepos.sh`
 
-*Notice that the $GZV environment variable specifies the Gazebo version #, and colcon, vcstool, and mercurial are required to run the script.  
-These can be installed with pip3:  
-`pip3 install colcon-common-extensions vcstool`  
-and pip (python2.7 version):  
+*Notice that the $GZV environment variable specifies the Gazebo version #, and colcon, vcstool, and mercurial are required to run the script.
+These can be installed with pip3:
+`pip3 install colcon-common-extensions vcstool`
+and pip (python2.7 version):
 `pip install mercurial`
 
-Then the following command will build the docker image, mount the gazebo source code directory into the running container, compile from source, set up the environment, and finally run gazebo  
+Then the following command will build the docker image, mount the gazebo source code directory into the running container, compile from source, set up the environment, and finally run gazebo
 `gzdev spawn 9 --source`
 
 
