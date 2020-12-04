@@ -191,7 +191,7 @@ def main():
         validate_input(args, config)
         process_input(args, config)
     except KeyboardInterrupt:
-        print("spawn was stopped with a Keyboard Interrupt.\n")
+        print("repository was stopped with a Keyboard Interrupt.\n")
 
 
 if __name__ == '__main__':

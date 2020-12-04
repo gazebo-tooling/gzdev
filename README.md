@@ -5,7 +5,6 @@ gzdev is a command line tool that facilitates the development of the open source
 
 **Prerequisites**
 * [Python](https://www.python.org/downloads/) - Version 3.5 or greater recommended
-* [Xpra](https://www.xpra.org/trac/wiki/Download) - Multi-platform screen and application forwarding system a.k.a. screen for X11. Required for Mac OS X and Windows, but optional for Linux
 
 1. Clone the repository  
 `git clone https://github.com/osrf/gzdev.git && cd gzdev`
@@ -32,12 +31,12 @@ Options:
 	--version      Show gzdev's version.
 
 Commands/Plugins:
-	spawn          Spawn a virtual environment ready for development.
+        repository     Enable/Disable gazebo repositories.
 ```
 
 ## repository
 ```
-System operations to manage extra repositories affecting Gazebo/ROS
+System operations to manage extra repositories affecting Gazebo/Ignition/ROS
 
 Usage:
 	gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>]
@@ -61,52 +60,6 @@ Some projects require prerelease or nigthly repositories in order to work in ear
 stages.
 
 `gzdev repository enable --project=ignition-math6`
-
-## spawn
-```
-Spawn various Gazebo versions and ROS distributions inside docker containers.
-
-Usage:
-	gzdev spawn [<gzv> | --gzv=<number>]
-	            [<ros> | --ros=<distro_name>]
-	            [<config> | --config=<file_name>]
-	            [<pr> | --pr=<number>]
-	            [--dev | --source]
-	            [--yes]
-	            [--nvidia]
-	gzdev spawn -h | --help
-	gzdev spawn --version
-
-Options:
-	-h --help               Show this screen
-	--version               Show gzdev's version
-	--gzv=<number>          Gazebo release version number
-	--ros=<distro_name>     ROS distribution name
-	--config=<file_name>    World configuration file
-	--pr=<number>           Branch to compile from based on Pull Request #
-	--dev                   Install Gazebo development libraries
-	--source                Build Gazebo/ROS from source
-	--yes                   Confirm selection of unofficial ROS + Gazebo version
-	--nvidia                Select nvidia as the runtime for the container.
-```
-## Basic Examples
-`gzdev spawn 9`
-
-`gzdev spawn 9 --nvidia`
-
-When looking to build Gazebo from source first do the folllowing at the root of the gzdev directory:  
-`mkdir gazebo && cd gazebo`  
-`export GZV=9 && bash ../docker/gzsrc/gzrepos.sh`  
-
-*Notice that the $GZV environment variable specifies the Gazebo version #, and colcon, vcstool, and mercurial are required to run the script.  
-These can be installed with pip3:  
-`pip3 install colcon-common-extensions vcstool`  
-and pip (python2.7 version):  
-`pip install mercurial`
-
-Then the following command will build the docker image, mount the gazebo source code directory into the running container, compile from source, set up the environment, and finally run gazebo  
-`gzdev spawn 9 --source`
-
 
 # Support/Contribute
 * [GitHub Issue Tracker](https://github.com/osrf/gzdev/issues) - gzdev specific questions
