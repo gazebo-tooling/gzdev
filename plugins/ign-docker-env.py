@@ -2,9 +2,9 @@
 # Licensed under the Apache License, Version 2.0
 
 
-# gzdev docker-env --ignition citadel
-# gzdev docker-env --ignition dome --linux-distro ubuntu:focal
-# gzdev docker-env --ignition dome --docker-args '-v /foo:/foo'
+# gzdev docker-env citadel
+# gzdev docker-env dome --linux-distro ubuntu:focal
+# gzdev docker-env dome --docker-args '-v /foo:/foo'
 
 """
 Usage:
