@@ -57,6 +57,7 @@ Options:
 * Start a container with Ignition Citadel installed: `gzdev ign-docker-env citadel`
 * Start an Ubuntu Bionic container with Ignition Dome installed: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic`
 * Start an Ubuntu Bionic container with Ignition Dome installed, passing in `/foo` locally as a volume into the container at `/bar`: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic --rocker-args '-v /foo:/bar'`
+* Start a container with user $HOME inside the container (among other things, this will allow dotfiles to be available in the container). It can potentially conflict with --vol argument: `gzdev ign-docker-env dome --rocker-args '--home'`
 
 ## repository
 ```
