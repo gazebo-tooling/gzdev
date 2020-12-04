@@ -92,8 +92,6 @@ def build_rocker_command(igniton_release, linux_distro, docker_args):
 
 
 def normalize_args(args):
-    if not args['IGN_RELEASE']:
-        error('The plugin must be run using the --ignition flag')
     ignition_version = args['IGN_RELEASE']
 
     if args['--linux-distro']:
