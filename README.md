@@ -37,7 +37,7 @@ Commands/Plugins:
 
 ## ign-docker-env
 ```
-Launch docker enviroments ready for Ignition development
+Launch docker environments ready for Ignition development
 
 Usage:
     gzdev ign-docker-env IGN_RELEASE
