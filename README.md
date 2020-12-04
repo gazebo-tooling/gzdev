@@ -54,9 +54,9 @@ Options:
 ```
 
 ## Basic examples
-`gzdev.py ign-docker-env citadel`
-`gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic`
-`gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic --docker-args`
+* Start a container with Ignition Citadel installed: `gzdev ign-docker-env citadel`
+* Start an Ubuntu Bionic container with Ignition Dome installed: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic`
+* Start an Ubuntu Bionic container with Ignition Dome installed, passing in `/foo` locally as a volume into the container at `/bar`: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic --docker-args '-v /foo:/bar'`
 
 ## repository
 ```
