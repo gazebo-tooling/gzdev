@@ -18,7 +18,7 @@
 Usage:
     gzdev ign-docker-env IGN_RELEASE
                 [--linux-distro <linux-distro>]
-                [--docker-args DOCKER_ARGS]
+                [--rocker-args DOCKER_ARGS]
     gzdev ign-docker-env -h | --help
     gzdev ign-docker-env --version
 
@@ -26,7 +26,7 @@ Options:
     -h --help                   Show this screen
     --version                   Show gzdev's version
     --linux-distro=linux-distro Linux distibution to use in docker env
-    --docker-args DOCKER_ARGS   Extra arguments to pass to docker
+    --rocker-args DOCKER_ARGS   Extra arguments to pass to docker
 """
 
 from docopt import docopt
@@ -99,7 +99,7 @@ def normalize_args(args):
     else:
         linux_distro = default_distro_by_ignition(ignition_version)
 
-    docker_args = args['--docker-args'].split(' ') if args['--docker-args'] else None
+    docker_args = args['--rocker-args'].split(' ') if args['--rocker-args'] else None
 
     return ignition_version, linux_distro, docker_args
 

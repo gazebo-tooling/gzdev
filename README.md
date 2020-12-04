@@ -42,7 +42,7 @@ Launch docker enviroments ready for Ignition development
 Usage:
     gzdev ign-docker-env IGN_RELEASE
                 [--linux-distro <linux-distro>]
-                [--docker-args DOCKER_ARGS]
+                [--rocker-args DOCKER_ARGS]
     gzdev ign-docker-env -h | --help
     gzdev ign-docker-env --version
 
@@ -50,13 +50,13 @@ Options:
     -h --help                   Show this screen
     --version                   Show gzdev's version
     --linux-distro=linux-distro Linux distibution to use in docker env
-    --docker-args DOCKER_ARGS   Extra arguments to pass to docker
+    --rocker-args DOCKER_ARGS   Extra arguments to pass to docker
 ```
 
 ## Basic examples
 * Start a container with Ignition Citadel installed: `gzdev ign-docker-env citadel`
 * Start an Ubuntu Bionic container with Ignition Dome installed: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic`
-* Start an Ubuntu Bionic container with Ignition Dome installed, passing in `/foo` locally as a volume into the container at `/bar`: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic --docker-args '-v /foo:/bar'`
+* Start an Ubuntu Bionic container with Ignition Dome installed, passing in `/foo` locally as a volume into the container at `/bar`: `gzdev ign-docker-env dome --linux-distro ubuntu:bionic --rocker-args '-v /foo:/bar'`
 
 ## repository
 ```
