@@ -18,7 +18,7 @@
 Usage:
     gzdev ign-docker-env IGN_RELEASE
                 [--linux-distro <linux-distro>]
-                [--rocker-args DOCKER_ARGS]
+                [--rocker-args ROCKER_ARGS]
                 [--vol $LOCAL_PATH:$CONTAINER_PATH[::$LOCAL_PATH:$CONTAINER_PATH ...]]
     gzdev ign-docker-env -h | --help
     gzdev ign-docker-env --version
@@ -27,7 +27,7 @@ Options:
     -h --help                           Show this screen
     --version                           Show gzdev's version
     --linux-distro linux-distro         Linux distibution to use in docker env
-    --rocker-args DOCKER_ARGS           Extra arguments to pass to docker
+    --rocker-args ROCKER_ARGS           Extra rocker arguments, captured in single quotes and separated by white space
     --vol $LOCAL_PATH:$CONTAINER_PATH   Load volumes into Docker container (separate multiple volumes with '::')
 """
 
@@ -35,6 +35,7 @@ from docopt import docopt
 from subprocess import check_call
 from sys import stderr
 import os
+import time
 
 
 ROCKER_CMD = ['rocker', '--x11', '--user']
@@ -59,6 +60,8 @@ def _check_call(cmd):
     print('')
     print("Invoking '%s'" % ' '.join(cmd))
     print('')
+    # sleep temporarily so that users can see the command being used
+    time.sleep(1)
 
     try:
         check_call(cmd)
