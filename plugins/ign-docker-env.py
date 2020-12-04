@@ -108,7 +108,7 @@ def main():
     try:
         ignition_version, linux_distro, docker_args = normalize_args(docopt(__doc__, version="gzdev-docker-env 0.1.0"))
         rocker_cmd = build_rocker_command(ignition_version, linux_distro, docker_args)
-        check_call(rocker_cmd)
+        _check_call(rocker_cmd)
     except KeyboardInterrupt:
         print("docker-env was stopped with a Keyboard Interrupt.\n")
 
