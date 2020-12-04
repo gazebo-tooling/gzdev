@@ -71,7 +71,9 @@ def error(msg):
 
 # TODO: use a yaml file to get this information
 def default_distro_by_ignition(ignition_release):
-    if ignition_release == 'dome':
+    if ignition_release == 'edifice':
+        return 'ubuntu:focal'
+    elif ignition_release == 'dome':
         return 'ubuntu:focal'
     elif ignition_release == 'citadel':
         return 'ubuntu:bionic'
