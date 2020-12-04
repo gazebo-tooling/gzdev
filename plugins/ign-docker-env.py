@@ -38,8 +38,19 @@ import os
 ROCKER_CMD = ['rocker', '--x11', '--user']
 
 
-def detect_nvidia():
-    return [x for x in os.listdir('/dev/') if x.startswith('nvidia')] != []
+# TODO: migrate this to use a gpu python library
+def get_gpu_params():
+    # check for nvidia
+    for x in os.listdir('/dev/'):
+        if x.startswith('nvidia'):
+            return ['--nvidia']
+    # check for intel
+    if not os.path.isdir('/dev/dri'):
+        return []
+    for x in os.listdir('/dev/dri/'):
+        if x.startswith('card'):
+            return [f'--devices /dev/dri/{x}']
+    return []
 
 
 def _check_call(cmd):
@@ -70,7 +81,7 @@ def default_distro_by_ignition(ignition_release):
 
 def build_rocker_command(igniton_release, linux_distro, docker_args):
     _, linux_distro_release = linux_distro.split(':')
-    cmd = ROCKER_CMD + ['--nvidia'] if detect_nvidia() else ROCKER_CMD
+    cmd = ROCKER_CMD + get_gpu_params()
     cmd += ['--ignition', f"{igniton_release}:{linux_distro_release}"]
     cmd += docker_args if docker_args else []
     cmd += ['--']
