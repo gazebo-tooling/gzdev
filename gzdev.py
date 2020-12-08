@@ -17,7 +17,6 @@ Options:
 
 Commands/Plugins:
         ign-docker-env Launch a docker container with default Ignition project configuration
-        spawn          Spawn a virtual environment ready for development.
         repository     Enable/Disable gazebo repositories.
 """
 
@@ -29,7 +28,6 @@ if __name__ == '__main__':
     args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)
     cmd = args['<command>']
     is_valid = {'ign-docker-env': True,
-                'spawn': True,
                 'repository': True}
 
     if is_valid.get(cmd):
