@@ -1,5 +1,8 @@
 distro
 docker==3.4.0
 docopt==0.6.2
-pytest==3.6.2
+pytest
 pyyaml
+# rocker -- waiting tty fixes from github_actions PR
+git+https://github.com/osrf/rocker.git@use_github_actions#egg=rocker
+git+https://github.com/adlarkin/ign-rocker.git#egg=ign-rocker
