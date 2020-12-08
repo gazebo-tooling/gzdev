@@ -39,6 +39,7 @@ Options:
 
 Commands/Plugins:
 	spawn          Spawn a virtual environment ready for development.
+	ign-docker-env Launch docker environments ready for Ignition development
 ```
 
 ## ign-docker-env
