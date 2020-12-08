@@ -1,4 +1,4 @@
-# gzdev [![Build Status](https://travis-ci.org/ignition-tooling/gzdev.svg?branch=master)](https://travis-ci.org/ignition-tooling/gzdev) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
+# gzdev ![CI](https://github.com/ignition-tooling/gzdev/workflows/CI/badge.svg) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
 gzdev is a command line tool that facilitates the development of the open source robotics simulator Gazebo. The tool aims to streamline many of the usual tasks that Gazebo developers face on a daily basis.
 
 # Installation
