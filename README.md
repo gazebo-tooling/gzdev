@@ -84,6 +84,47 @@ gzdev ign-docker-env dome --rocker-args '--home'
 gzdev ign-docker-env citadel --vol /foo:/bar::/my_proj:/ws
 ```
 
+### Using ign-docker-env to build Ignition repositories from source
+1. Install [vcstool](https://github.com/dirk-thomas/vcstool)
+2. Create a colcon workspace:
+```
+mkdir -p ~/colcon_ws/src/
+export COLCON_WS_PATH=~/colcon_ws/
+```
+3. Determine the ignition version you'd like to work with (can be something like `citadel` or `dome`):
+```
+export IGN_DISTRO=citadel
+```
+4. Get all of the repositories needed to build `IGN_DISTRO` from source:
+```
+cd ~/colcon_ws/src/
+wget 'https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-'$IGN_DISTRO'.yaml'
+vcs import < 'collection-'$IGN_DISTRO'.yaml'
+```
+5. Modify the repositories as needed (check out branches, make commits, etc.), and delete any repositories that you don't need to build from source
+6. Start a container with your specified Ignition version, loading your colcon workspace into the container:
+```
+gzdev ign-docker-env $IGN_DISTRO --vol $COLCON_WS_PATH:/ws
+```
+7. Build the repositories in the workspace with colcon.
+Make sure you go to the root of the workspace first:
+```
+cd /ws
+```
+Run the following command if you want to build tests:
+```
+colcon build --merge-install
+```
+Run the following command if you don't want to build tests:
+```
+colcon build --merge-install --cmake-args -DCMAKE_BUILD_TESTING=0
+```
+8. Source the workspace:
+```
+. /ws/install/setup.bash
+```
+9. Use Ignition!
+
 ## repository
 ```
 System operations to manage extra repositories affecting Gazebo/ROS
