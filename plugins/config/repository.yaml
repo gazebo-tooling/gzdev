@@ -24,6 +24,103 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
+    # Use nightlies in all main branches
+    - name: ignition-fortress
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-cmake3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-common5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-fuel-tools7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-gazebo6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-gui6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-launch5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-msgs8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-physics5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-plugin2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-rendering6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-sensors6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-tools2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-transport11
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-utils2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: sdformat12
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
