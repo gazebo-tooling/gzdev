@@ -31,18 +31,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: ignition-cmake3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
-    - name: ignition-common5
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
     - name: ignition-fuel-tools7
       repositories:
           - name: osrf
@@ -79,12 +67,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: ignition-plugin2
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
     - name: ignition-rendering6
       repositories:
           - name: osrf
@@ -97,19 +79,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: ignition-tools2
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
     - name: ignition-transport11
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
-    - name: ignition-utils2
       repositories:
           - name: osrf
             type: stable
