@@ -4,3 +4,6 @@ pytest
 pyyaml
 git+https://github.com/osrf/rocker.git#egg=rocker
 git+https://github.com/adlarkin/ign-rocker.git#egg=ign-rocker
+# needed to patch a broken dependency in docker-py (see https://github.com/docker/docker-py/pull/2844)
+# this can be removed once the PR linked above is merged
+six==1.16.0

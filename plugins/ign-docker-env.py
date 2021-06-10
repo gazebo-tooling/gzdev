@@ -29,6 +29,10 @@ Options:
     --linux-distro linux-distro         Linux distibution to use in docker env
     --rocker-args ROCKER_ARGS           Extra rocker arguments, captured in single quotes and separated by white space
     --vol $LOCAL_PATH:$CONTAINER_PATH   Load volumes into Docker container (separate multiple volumes with '::')
+
+Notes:
+    Valid inputs for IGN_RELEASE are 'citadel', 'dome', 'edifice', and 'fortress'.
+    Valid inputs for the --linux-distro arg are 'ubuntu:bionic' or 'ubuntu:focal'.
 """
 
 from docopt import docopt
@@ -39,6 +43,17 @@ import time
 
 
 ROCKER_CMD = ['rocker', '--x11', '--user']
+
+# TODO: use a yaml file to get this information
+# keep track of all valid versions and their default linux distro
+bionic = 'ubuntu:bionic'
+focal = 'ubuntu:focal'
+IGN_VERSIONS = {
+        'citadel' : bionic,
+        'dome' : bionic,
+        'edifice' : focal,
+        'fortress' : focal
+        }
 
 
 # TODO: migrate this to use a gpu python library
@@ -74,18 +89,6 @@ def error(msg):
     exit(-1)
 
 
-# TODO: use a yaml file to get this information
-def default_distro_by_ignition(ignition_release):
-    if ignition_release == 'edifice':
-        return 'ubuntu:focal'
-    elif ignition_release == 'dome':
-        return 'ubuntu:focal'
-    elif ignition_release == 'citadel':
-        return 'ubuntu:bionic'
-    else:
-        error(f"Unknown ignition release {ignition_release}")
-
-
 def build_rocker_command(igniton_release, linux_distro, docker_args, vol_args):
     _, linux_distro_release = linux_distro.split(':')
     cmd = ROCKER_CMD + get_gpu_params()
@@ -102,7 +105,7 @@ def normalize_args(args):
     if args['--linux-distro']:
         linux_distro = args['--linux-distro']
     else:
-        linux_distro = default_distro_by_ignition(ignition_version)
+        linux_distro = IGN_VERSIONS[ignition_version]
 
     docker_args = args['--rocker-args'].split(' ') if args['--rocker-args'] else None
 
@@ -116,6 +119,8 @@ def main():
         ignition_version, linux_distro, docker_args, vol_args = normalize_args(docopt(__doc__, version="gzdev-docker-env 0.1.0"))
         rocker_cmd = build_rocker_command(ignition_version, linux_distro, docker_args, vol_args)
         _check_call(rocker_cmd)
+    except KeyError:
+        print("Invalid value given for IGN_RELEASE. Please choose from ", list(IGN_VERSIONS.keys()))
     except KeyboardInterrupt:
         print("docker-env was stopped with a Keyboard Interrupt.\n")
 
