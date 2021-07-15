@@ -91,6 +91,13 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    # prereleases for ignition-gazebo5
+    - name: ignition-gazebo5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
