@@ -30,17 +30,21 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: ignition-fuel-tools7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-gazebo6
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: ignition-gui6
@@ -48,11 +52,13 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-launch5
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: ignition-msgs8
@@ -60,37 +66,37 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-physics5
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-rendering6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-sensors6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-transport11
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: sdformat12
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
