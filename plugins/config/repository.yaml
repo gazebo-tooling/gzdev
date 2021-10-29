@@ -24,8 +24,8 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
-    # needs ign-physics2 2.5 prerelease, remove after 2.5 stable release
-    - name: ignition-gazebo3
+    # ign-gazebo3 needs ign-physics2 2.5 prerelease, remove after 2.5 stable release
+    - name: ignition-physics2
       repositories:
           - name: osrf
             type: stable
