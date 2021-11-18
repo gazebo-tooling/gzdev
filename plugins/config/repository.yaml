@@ -30,15 +30,11 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
-          - name: osrf
             type: nightly
     - name: ignition-gazebo7
       repositories:
           - name: osrf
             type: stable
-          - name: osrf
-            type: prerelease
           - name: osrf
             type: nightly
     - name: ignition-gui7
@@ -46,13 +42,11 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
     - name: ignition-launch6
       repositories:
           - name: osrf
             type: stable
-          - name: osrf
-            type: prerelease
           - name: osrf
             type: nightly
     - name: ignition-sensors7
@@ -60,7 +54,7 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
