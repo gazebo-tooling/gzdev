@@ -24,6 +24,43 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
+    # Use nightlies in all main branches
+    - name: ignition-garden
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-gazebo7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-gui7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+    - name: ignition-launch6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+    - name: ignition-sensors7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
