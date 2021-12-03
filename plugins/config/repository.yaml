@@ -61,6 +61,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-transport12
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
