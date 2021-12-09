@@ -67,6 +67,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: sdformat13
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
