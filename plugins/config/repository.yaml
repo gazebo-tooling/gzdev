@@ -25,6 +25,12 @@ repositories:
 # first entry matching the name is used
 projects:
     # Use nightlies in all main branches
+    - name: ignition-common5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-fuel-tools8
       repositories:
           - name: osrf
@@ -32,12 +38,6 @@ projects:
           - name: osrf
             type: nightly
     - name: ignition-garden
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
-    - name: ignition-common5
       repositories:
           - name: osrf
             type: stable
