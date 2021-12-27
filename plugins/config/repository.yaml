@@ -37,6 +37,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-common5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-gazebo7
       repositories:
           - name: osrf
