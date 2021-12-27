@@ -55,6 +55,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-msgs9
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-sensors7
       repositories:
           - name: osrf
