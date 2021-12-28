@@ -61,6 +61,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-math7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-msgs9
       repositories:
           - name: osrf
