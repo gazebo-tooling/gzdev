@@ -73,7 +73,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: ignition-phyiscs6
+    - name: ignition-physics6
       repositories:
           - name: osrf
             type: stable
