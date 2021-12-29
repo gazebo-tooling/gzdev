@@ -25,6 +25,12 @@ repositories:
 # first entry matching the name is used
 projects:
     # Use nightlies in all main branches
+    - name: ignition-cmake3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-common5
       repositories:
           - name: osrf
@@ -79,6 +85,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-plugin2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-rendering7
       repositories:
           - name: osrf
@@ -91,7 +103,19 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: ignition-tools2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: ignition-transport12
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: ignition-utils2
       repositories:
           - name: osrf
             type: stable
