@@ -20,9 +20,10 @@ Commands/Plugins:
         repository     Enable/Disable gazebo repositories.
 """
 
-from docopt import docopt
 from importlib import import_module
 from sys import stderr
+
+from docopt import docopt
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)

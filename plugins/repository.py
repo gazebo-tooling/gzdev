@@ -19,15 +19,16 @@ Options:
         --version               Show gzdev's version
 """
 
-from docopt import docopt
-import imp
-from os import environ
-from os.path import dirname, realpath, isfile, join
-import re
-from subprocess import run, PIPE, CalledProcessError, check_call
-from sys import stderr
 import pathlib
+import re
+import subprocess
+import sys
+from os.path import isfile
+
+from docopt import docopt
+
 import yaml
+
 # python3-distro is not available in Xenial. platform is deprecated
 # in favor of distro
 try:
@@ -42,21 +43,21 @@ def _check_call(cmd):
     print('')
 
     try:
-        check_call(cmd)
-    except Exception as e:
-        print(str(e))
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError as ex:
+        print(ex)
 
 
 def error(msg):
-    print('\n [err] ' + msg + '\n', file=stderr)
+    print('\n [err] ' + msg + '\n', file=sys.stderr)
     exit(-1)
 
 
 def warn(msg):
-    print('\n [warn] ' + msg + '\n', file=stderr)
+    print('\n [warn] ' + msg + '\n', file=sys.stderr)
 
 
-def load_config_file(config_file_path = 'config/repository.yaml'):
+def load_config_file(config_file_path='config/repository.yaml'):
     fn = pathlib.Path(__file__).parent / config_file_path
     with open(str(fn), 'r') as stream:
         try:
@@ -127,11 +128,13 @@ def get_sources_list_file_path(repo_name, repo_type):
 
 
 def install_key(key):
-    _check_call(['apt-key','adv','--keyserver','keyserver.ubuntu.com','--recv-keys', key])
+    _check_call(['apt-key', 'adv',
+                 '--keyserver', 'keyserver.ubuntu.com',
+                 '--recv-keys', key])
 
 
 def run_apt_update():
-    _check_call(['apt-get','update'])
+    _check_call(['apt-get', 'update'])
 
 
 def install_repos(project_list, config, linux_distro):
@@ -155,13 +158,14 @@ def install_repo(repo_name, repo_type, config, linux_distro):
     install_key(key)
 
     try:
-        f = open(full_path,'w')
+        f = open(full_path, 'w')
         f.write(content)
         f.close()
     except PermissionError:
         print('No permissiong to install ' + full_path + '. Run the script with sudo.')
 
     run_apt_update()
+
 
 def disable_repo(repo_name):
     print('disable feature not implemented yet')
@@ -184,7 +188,7 @@ def normalize_args(args):
 def validate_input(args, config):
     action, repo_name, repo_type, project, force_linux_distro = args
 
-    if (action == 'enable' or action == 'disable' or action =='list'):
+    if (action == 'enable' or action == 'disable' or action == 'list'):
         True
     else:
         error('Unknown action: ' + action)
