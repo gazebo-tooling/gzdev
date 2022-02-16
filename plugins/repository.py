@@ -2,10 +2,10 @@
 # Licensed under the Apache License, Version 2.0
 """
 Usage:
-	gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>] [--force-linux-distro=<distro>]
+        gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>] [--force-linux-distro=<distro>]
         gzdev repository list
-	gzdev repository (-h | --help)
-	gzdev repository --version
+        gzdev repository (-h | --help)
+        gzdev repository --version
 
 Action:
         enable                  Enable repository in the system
@@ -13,8 +13,8 @@ Action:
         list                    List repositories enabled
 
 Options:
-	-h --help               Show this screen
-	--version               Show gzdev's version
+        -h --help               Show this screen
+        --version               Show gzdev's version
 """
 
 from docopt import docopt

@@ -6,14 +6,14 @@
 Streamline many of the usual tasks that Gazebo developers face on a daily basis.
 
 Usage:
-	gzdev [--version] [--help]
-	      <command> [<args>...]
-	gzdev -h | --help
-	gzdev --version
+        gzdev [--version] [--help]
+              <command> [<args>...]
+        gzdev -h | --help
+        gzdev --version
 
 Options:
-	-h --help      Show this screen.
-	--version      Show gzdev's version.
+        -h --help      Show this screen.
+        --version      Show gzdev's version.
 
 Commands/Plugins:
         ign-docker-env Launch a docker container with default Ignition project configuration
