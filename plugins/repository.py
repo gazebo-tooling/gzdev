@@ -1,6 +1,8 @@
 # Copyright 2018 David Rosa
 # Licensed under the Apache License, Version 2.0
 """
+Actions related to adding/modifying apt repositories for ignition.
+
 Usage:
         gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>] [--force-linux-distro=<distro>]
         gzdev repository list
@@ -33,6 +35,7 @@ try:
 except ImportError:
     import platform
 
+
 def _check_call(cmd):
     print('')
     print("Invoking '%s'" % ' '.join(cmd))
@@ -43,12 +46,15 @@ def _check_call(cmd):
     except Exception as e:
         print(str(e))
 
+
 def error(msg):
     print('\n [err] ' + msg + '\n', file=stderr)
     exit(-1)
 
+
 def warn(msg):
     print('\n [warn] ' + msg + '\n', file=stderr)
+
 
 def load_config_file(config_file_path = 'config/repository.yaml'):
     fn = pathlib.Path(__file__).parent / config_file_path
@@ -59,6 +65,7 @@ def load_config_file(config_file_path = 'config/repository.yaml'):
         except yaml.YAMLError as exc:
             print(exc)
             exit(-1)
+
 
 def load_project(project, config):
     for p in config['projects']:
@@ -78,6 +85,7 @@ def get_linux_distro_version():
     except NameError:
         return platform.linux_distribution()[2]
 
+
 def get_linux_distro():
     # Handle both: distro module and old platform
     try:
@@ -93,12 +101,14 @@ def get_linux_distro():
     else:
         return distro_str.lower()
 
+
 def get_repo_key(repo_name, config):
     for p in config['repositories']:
         if p['name'] == repo_name:
             return p['key']
 
     error('No key in repo: ' + repo_name)
+
 
 def get_repo_url(repo_name, repo_type, config):
     for p in config['repositories']:
@@ -115,15 +125,19 @@ def get_sources_list_file_path(repo_name, repo_type):
     directory = '/etc/apt/sources.list.d'
     return directory + '/' + filename
 
+
 def install_key(key):
     _check_call(['apt-key','adv','--keyserver','keyserver.ubuntu.com','--recv-keys', key])
+
 
 def run_apt_update():
     _check_call(['apt-get','update'])
 
+
 def install_repos(project_list, config, linux_distro):
     for p in project_list:
         install_repo(p['name'], p['type'], config, linux_distro)
+
 
 def install_repo(repo_name, repo_type, config, linux_distro):
     url = get_repo_url(repo_name, repo_type, config)
@@ -152,6 +166,7 @@ def install_repo(repo_name, repo_type, config, linux_distro):
 def disable_repo(repo_name):
     print('disable feature not implemented yet')
 
+
 def normalize_args(args):
     action = args['ACTION']
     repo_name = args['<repo-name>'] if args['<repo-name>'] else 'osrf'
@@ -165,6 +180,7 @@ def normalize_args(args):
 
     return action, repo_name, repo_type, project, linux_distro
 
+
 def validate_input(args, config):
     action, repo_name, repo_type, project, force_linux_distro = args
 
@@ -172,6 +188,7 @@ def validate_input(args, config):
         True
     else:
         error('Unknown action: ' + action)
+
 
 def process_input(args, config):
     action, repo_name, repo_type, project, linux_distro = args
@@ -184,6 +201,7 @@ def process_input(args, config):
             install_repo(repo_name, repo_type, config, linux_distro)
     elif (action == 'disable'):
         disable_repo(repo_name)
+
 
 def main():
     try:
