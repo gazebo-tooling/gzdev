@@ -31,17 +31,17 @@ class TestRepo_URL(TestBase):
 
 class TestProjectNameResolution(TestBase):
     def test_direct_match(self):
-        projects = repository.load_project("ignition-math6", self.config)
+        projects = repository.load_project('ignition-math6', self.config)
         for p in projects:
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'stable')
 
     def test_non_exist(self):
         with self.assertRaises(SystemExit) as cm:
-            projects = repository.load_project("fooooo", self.config)
+            projects = repository.load_project('fooooo', self.config)
 
     def test_regexp(self):
-        projects = repository.load_project("ignition-plugin", self.config)
+        projects = repository.load_project('ignition-plugin', self.config)
         for p in projects:
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'regexp')

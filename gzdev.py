@@ -31,7 +31,7 @@ if __name__ == '__main__':
                 'repository': True}
 
     if is_valid.get(cmd):
-        plugin = import_module("plugins." + cmd)
+        plugin = import_module('plugins.' + cmd)
         plugin.main()
     else:
-        print("\nERROR: `%s` is not a valid gzdev plugin.\n" % cmd, file=stderr)
+        print('\nERROR: `%s` is not a valid gzdev plugin.\n' % cmd, file=stderr)

@@ -73,7 +73,7 @@ def get_gpu_params():
 
 def _check_call(cmd):
     print('')
-    print("Invoking '%s'" % ' '.join(cmd))
+    print('Invoking '%s'' % ' '.join(cmd))
     print('')
     # sleep temporarily so that users can see the command being used
     time.sleep(1)
@@ -85,14 +85,14 @@ def _check_call(cmd):
 
 
 def error(msg):
-    print(f"\n {msg} \n", file=stderr)
+    print(f'\n {msg} \n', file=stderr)
     exit(-1)
 
 
 def build_rocker_command(igniton_release, linux_distro, docker_args, vol_args):
     _, linux_distro_release = linux_distro.split(':')
     cmd = ROCKER_CMD + get_gpu_params()
-    cmd += ['--ignition', f"{igniton_release}:{linux_distro_release}"]
+    cmd += ['--ignition', f'{igniton_release}:{linux_distro_release}']
     cmd += docker_args if docker_args else []
     cmd += vol_args if vol_args else []
     cmd += [linux_distro, '/bin/bash']
@@ -116,13 +116,13 @@ def normalize_args(args):
 
 def main():
     try:
-        ignition_version, linux_distro, docker_args, vol_args = normalize_args(docopt(__doc__, version="gzdev-docker-env 0.1.0"))
+        ignition_version, linux_distro, docker_args, vol_args = normalize_args(docopt(__doc__, version='gzdev-docker-env 0.1.0'))
         rocker_cmd = build_rocker_command(ignition_version, linux_distro, docker_args, vol_args)
         _check_call(rocker_cmd)
     except KeyError:
-        print("Invalid value given for IGN_RELEASE. Please choose from ", list(IGN_VERSIONS.keys()))
+        print('Invalid value given for IGN_RELEASE. Please choose from ', list(IGN_VERSIONS.keys()))
     except KeyboardInterrupt:
-        print("docker-env was stopped with a Keyboard Interrupt.\n")
+        print('docker-env was stopped with a Keyboard Interrupt.\n')
 
 
 if __name__ == '__main__':
