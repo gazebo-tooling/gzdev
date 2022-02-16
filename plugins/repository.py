@@ -74,17 +74,18 @@ def load_project(project, config):
 def get_linux_distro_version():
     # Handle both: distro module and old platform
     try:
-        return distro.linux_distribution()[2]
+        return distro.codename()
     except NameError:
         return platform.linux_distribution()[2]
 
 def get_linux_distro():
     # Handle both: distro module and old platform
     try:
-        distro_str = distro.linux_distribution()[0]
+        distro_str = distro.id()
     except NameError:
         distro_str = platform.linux_distribution()[0]
 
+    # Probably not necessary with distro.id, but retained for compatibility
     if "Debian" in distro_str:
         return "debian"
     elif "Ubuntu" in distro_str:
