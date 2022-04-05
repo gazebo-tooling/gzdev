@@ -33,7 +33,7 @@ Options:
     --vol $LOCAL_PATH:$CONTAINER_PATH   Load volumes into Docker container (separate multiple volumes with '::')
 
 Notes:
-    Valid inputs for IGN_RELEASE are 'citadel', 'dome', 'edifice', and 'fortress'.
+    Valid inputs for IGN_RELEASE are 'citadel' and 'fortress'.
     Valid inputs for the --linux-distro arg are 'ubuntu:bionic' or 'ubuntu:focal'.
 """
 
@@ -53,8 +53,6 @@ bionic = 'ubuntu:bionic'
 focal = 'ubuntu:focal'
 IGN_VERSIONS = {
     'citadel': bionic,
-    'dome': bionic,
-    'edifice': focal,
     'fortress': focal
 }
 
