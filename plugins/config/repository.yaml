@@ -127,12 +127,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-gazebo6
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
     # TOOD(jrivero): remove when the renaming of ign to gz
     # Use nightlies in all main branches
     - name: ignition-cmake3
