@@ -25,6 +25,116 @@ repositories:
 # first entry matching the name is used
 projects:
     # Use nightlies in all main branches
+    - name: gazebo-cmake3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-common5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-fuel-tools8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-garden
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-gazebo7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-gui7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-launch6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-math7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-msgs9
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-physics6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-plugin2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-rendering7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-sensors7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-tools2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-transport12
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-utils2
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: sdformat13
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gazebo-gazebo6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+    # TOOD(jrivero): remove when the renaming of ign to gz
+    # Use nightlies in all main branches
     - name: ignition-cmake3
       repositories:
           - name: osrf
@@ -132,6 +242,11 @@ projects:
       repositories:
           - name: osrf
             type: stable
+    - name: gazebo-.*
+      repositories:
+          - name: osrf
+            type: stable
+    # TOOD(jrivero): remove when the renaming of ign to gz
     - name: ignition-.*
       repositories:
           - name: osrf
