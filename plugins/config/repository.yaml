@@ -49,7 +49,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-gazebo7
+    - name: gz-sim7
       repositories:
           - name: osrf
             type: stable
