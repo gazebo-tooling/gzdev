@@ -127,12 +127,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: ignition-gazebo6
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
