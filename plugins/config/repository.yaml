@@ -25,97 +25,97 @@ repositories:
 # first entry matching the name is used
 projects:
     # Use nightlies in all main branches
-    - name: gazebo-cmake3
+    - name: gz-cmake3
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-common5
+    - name: gz-common5
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-fuel-tools8
+    - name: gz-fuel-tools8
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-garden
+    - name: gz-garden
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-gazebo7
+    - name: gz-gazebo7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-gui7
+    - name: gz-gui7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-launch6
+    - name: gz-launch6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-math7
+    - name: gz-math7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-msgs9
+    - name: gz-msgs9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-physics6
+    - name: gz-physics6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-plugin2
+    - name: gz-plugin2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-rendering7
+    - name: gz-rendering7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-sensors7
+    - name: gz-sensors7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-tools2
+    - name: gz-tools2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-transport12
+    - name: gz-transport12
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-utils2
+    - name: gz-utils2
       repositories:
           - name: osrf
             type: stable
@@ -127,7 +127,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gazebo-gazebo6
+    - name: gz-gazebo6
       repositories:
           - name: osrf
             type: stable
@@ -242,7 +242,7 @@ projects:
       repositories:
           - name: osrf
             type: stable
-    - name: gazebo-.*
+    - name: gz-.*
       repositories:
           - name: osrf
             type: stable
