@@ -1,4 +1,4 @@
-# gzdev ![CI](https://github.com/ignition-tooling/gzdev/workflows/CI/badge.svg) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
+# gzdev ![CI](https://github.com/gazebo-tooling/gzdev/workflows/CI/badge.svg) [![Build Status](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64/badge/icon)](https://build.osrfoundation.org/job/gzdev-ci-pr_any-xenial-amd64)
 gzdev is a command line tool that facilitates the development of the open source robotics simulator Gazebo. The tool aims to streamline many of the usual tasks that Gazebo developers face on a daily basis.
 
 # Installation
@@ -8,7 +8,7 @@ gzdev is a command line tool that facilitates the development of the open source
 
 1. Clone the repository:
 ```
-git clone https://github.com/ignition-tooling/gzdev.git && cd gzdev
+git clone https://github.com/gazebo-tooling/gzdev.git && cd gzdev
 ```
 
 2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional). Also install [rocker](https://github.com/osrf/rocker) and [ign-rocker](https://github.com/adlarkin/ign-rocker) for the `ign-docker-env` command:
@@ -98,7 +98,7 @@ export IGN_DISTRO=citadel
 4. Get all of the repositories needed to build `IGN_DISTRO` from source:
 ```
 cd ~/colcon_ws/src/
-wget 'https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-'$IGN_DISTRO'.yaml'
+wget 'https://raw.githubusercontent.com/gazebo-tooling/gazebodistro/master/collection-'$IGN_DISTRO'.yaml'
 vcs import < 'collection-'$IGN_DISTRO'.yaml'
 ```
 5. Modify the repositories as needed (check out branches, make commits, etc.), and delete any repositories that you don't need to build from source
@@ -152,7 +152,7 @@ stages.
 `gzdev repository enable --project=ignition-math6`
 
 # Support/Contribute
-* [GitHub Issue Tracker](https://github.com/ignition-tooling/gzdev/issues) - gzdev specific questions
+* [GitHub Issue Tracker](https://github.com/gazebo-tooling/gzdev/issues) - gzdev specific questions
 * [Gazebo Answers](http://answers.gazebosim.org) - Gazebo specific questions
 * [Gazebo Community](https://community.gazebosim.org) - General Discussion
 
