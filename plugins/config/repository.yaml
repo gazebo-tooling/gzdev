@@ -201,6 +201,9 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+            # Temporarily enable pre-prelease to get access to OGRE 2.3 debs
+          - name: osrf
+            type: prerelease
     - name: ignition-sensors7
       repositories:
           - name: osrf
