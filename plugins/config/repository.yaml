@@ -25,6 +25,103 @@ repositories:
 # first entry matching the name is used
 projects:
     # Use nightlies in all main branches
+    - name: gz-cmake4
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-common6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-fuel-tools9
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-sim8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-gui8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-launch7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-math8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-msgs10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-physics7
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-plugin3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-rendering8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-sensors8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-tools3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-transport13
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-utils3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: sdformat14
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    # Use nightlies in all Garden branches until there are pre-releases
     - name: gz-cmake3
       repositories:
           - name: osrf
@@ -128,7 +225,7 @@ projects:
           - name: osrf
             type: nightly
     # TOOD(jrivero): remove when the renaming of ign to gz
-    # Use nightlies in all main branches
+    # Use nightlies in all Garden branches until there are pre-releases
     - name: ignition-cmake3
       repositories:
           - name: osrf
