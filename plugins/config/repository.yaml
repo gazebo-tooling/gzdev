@@ -127,103 +127,103 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-common5
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-fuel-tools8
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-garden
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-sim7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-gui7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-launch6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-math7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-msgs9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-physics6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-plugin2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-rendering7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-sensors7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-tools2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-transport12
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-utils2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: sdformat13
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     # TOOD(jrivero): remove when the renaming of ign to gz
     # Use nightlies in all Garden branches until there are pre-releases
     - name: ignition-cmake3
@@ -231,103 +231,103 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-common5
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-fuel-tools8
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-garden
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-gazebo7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-gui7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-launch6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-math7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-msgs9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-physics6
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-plugin2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-rendering7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-sensors7
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-tools2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-transport12
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: ignition-utils2
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: sdformat13
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
