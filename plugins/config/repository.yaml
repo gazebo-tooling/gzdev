@@ -24,6 +24,13 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
+    # Remove gz-harmonic1 when Harmonic is released
+    - name: gz-harmonic1
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     # Use nightlies in all main branches
     - name: gz-cmake4
       repositories:
