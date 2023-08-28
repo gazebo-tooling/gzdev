@@ -74,12 +74,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-msgs10
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
     - name: gz-physics7
       repositories:
           - name: osrf
