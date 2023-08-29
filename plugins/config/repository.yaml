@@ -86,12 +86,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-rendering8
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
     - name: gz-sensors8
       repositories:
           - name: osrf
@@ -111,12 +105,6 @@ projects:
           - name: osrf
             type: nightly
     - name: gz-utils3
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: nightly
-    - name: sdformat14
       repositories:
           - name: osrf
             type: stable
