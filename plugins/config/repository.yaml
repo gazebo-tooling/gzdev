@@ -56,8 +56,6 @@ projects:
             type: stable
           - name: osrf
             type: prerelease
-          - name: osrf
-            type: nightly
     - name: gz-gui8
       repositories:
           - name: osrf
@@ -70,8 +68,6 @@ projects:
             type: stable
           - name: osrf
             type: prerelease
-          - name: osrf
-            type: nightly
     - name: gz-math8
       repositories:
           - name: osrf
