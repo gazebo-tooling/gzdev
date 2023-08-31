@@ -49,11 +49,13 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-sim8
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-gui8
@@ -61,11 +63,13 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-launch7
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-math8
@@ -79,7 +83,7 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-plugin3
       repositories:
           - name: osrf
@@ -91,7 +95,7 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-tools3
       repositories:
           - name: osrf
@@ -103,7 +107,7 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
+            type: prerelease
     - name: gz-utils3
       repositories:
           - name: osrf
