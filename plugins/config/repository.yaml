@@ -86,6 +86,12 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    - name: gz-rendering8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     - name: gz-sensors8
       repositories:
           - name: osrf
