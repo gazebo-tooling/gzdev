@@ -24,8 +24,8 @@ repositories:
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
-    # Remove gz-harmonic1 when Harmonic is released
-    - name: gz-harmonic1
+    # Remove gz-ionic when Ionic is released
+    - name: gz-ionic1
       repositories:
           - name: osrf
             type: stable
@@ -44,73 +44,85 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-fuel-tools9
+    - name: gz-msgs11
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
-    - name: gz-sim8
+            type: nightly
+    - name: gz-fuel-tools10
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
-    - name: gz-gui8
+            type: nightly
+    - name: gz-sim9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
-    - name: gz-launch7
+            type: nightly
+    - name: gz-gui9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
+    - name: gz-launch8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     - name: gz-math8
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-physics7
+    - name: gz-physics8
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
     - name: gz-plugin3
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-rendering8
+    - name: gz-rendering9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
-    - name: gz-sensors8
+            type: nightly
+    - name: gz-sensors9
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
     - name: gz-tools3
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-transport13
+    - name: gz-transport14
       repositories:
           - name: osrf
             type: stable
           - name: osrf
-            type: prerelease
+            type: nightly
     - name: gz-utils3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: sdformat15
       repositories:
           - name: osrf
             type: stable
