@@ -4,7 +4,9 @@
 Actions related to adding/modifying apt repositories for ignition.
 
 Usage:
-        gzdev repository (ACTION) [<repo-name>] [<repo-type>] [--project=<project_name>] [--force-linux-distro=<distro>]
+        gzdev repository (ACTION) [<repo-name>] [<repo-type>]
+            [--project=<project_name>] [--force-linux-distro=<distro>]
+            [--keyserver=<keyserver>]
         gzdev repository list
         gzdev repository (-h | --help)
         gzdev repository --version
@@ -127,9 +129,9 @@ def get_sources_list_file_path(repo_name, repo_type):
     return directory + '/' + filename
 
 
-def install_key(key):
+def install_key(key, keyserver):
     _check_call(['apt-key', 'adv',
-                 '--keyserver', 'keyserver.ubuntu.com',
+                 '--keyserver', keyserver,
                  '--recv-keys', key])
 
 
@@ -137,12 +139,12 @@ def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(project_list, config, linux_distro):
+def install_repos(project_list, config, linux_distro, keyserver):
     for p in project_list:
-        install_repo(p['name'], p['type'], config, linux_distro)
+        install_repo(p['name'], p['type'], config, linux_distro, keyserver)
 
 
-def install_repo(repo_name, repo_type, config, linux_distro):
+def install_repo(repo_name, repo_type, config, linux_distro, keyserver):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
     # if not linux_distro provided, try to guess it
@@ -155,7 +157,7 @@ def install_repo(repo_name, repo_type, config, linux_distro):
         warn('gzdev file with the repositoy already exists in the system\n[' + full_path + ']')
         return
 
-    install_key(key)
+    install_key(key, keyserver)
 
     try:
         f = open(full_path, 'w')
@@ -181,28 +183,30 @@ def normalize_args(args):
         linux_distro = force_linux_distro
     else:
         linux_distro = None
+    keyserver = args['--keyserver'] if args['--keyserver'] else \
+        'keyserver.ubuntu.com'
 
-    return action, repo_name, repo_type, project, linux_distro
+    return action, repo_name, repo_type, project, linux_distro, keyserver
 
 
 def validate_input(args, config):
-    action, repo_name, repo_type, project, force_linux_distro = args
+    action, repo_name, repo_type, project, force_linux_distro, keyserver = args
 
     if (action == 'enable' or action == 'disable' or action == 'list'):
-        True
+        pass
     else:
         error('Unknown action: ' + action)
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro = args
+    action, repo_name, repo_type, project, linux_distro, keyserver = args
 
     if (action == 'enable'):
         if project:
             project_list = load_project(project, config)
-            install_repos(project_list, config, linux_distro)
+            install_repos(project_list, config, linux_distro, keyserver)
         else:
-            install_repo(repo_name, repo_type, config, linux_distro)
+            install_repo(repo_name, repo_type, config, linux_distro, keyserver)
     elif (action == 'disable'):
         disable_repo(repo_name)
 
