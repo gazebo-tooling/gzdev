@@ -23,6 +23,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 from os.path import isfile
 
 from docopt import docopt
@@ -106,9 +107,12 @@ def get_linux_distro():
 def get_repo_key(repo_name, config):
     for p in config['repositories']:
         if p['name'] == repo_name:
-            return p['key']
+            try:
+                gpg_url = p['key']['gpg_url']
+            finally:
+                error('No key >> gpg_url in repo: ' + repo_name)
 
-    error('No key in repo: ' + repo_name)
+    return gpg_url
 
 
 def get_repo_url(repo_name, repo_type, config):
@@ -121,16 +125,26 @@ def get_repo_url(repo_name, repo_type, config):
     error('Unknown repository or type: ' + repo_name + '/' + repo_type)
 
 
+def get_repo_keyring_path(repo_name, config):
+    keyring_base_dir = pathlib.Path("/usr/share/keyrings/")
+    for p in config['repositories']:
+        if p['name'] == repo_name:
+            return keyring_base_dir / \
+                   pathlib.Path(f"#{repo_name}_#{p['linux_distro']}")
+
+
 def get_sources_list_file_path(repo_name, repo_type):
     filename = '_gzdev_' + repo_name + '_' + repo_type + '.list'
     directory = '/etc/apt/sources.list.d'
     return directory + '/' + filename
 
 
-def install_key(key):
-    _check_call(['apt-key', 'adv',
-                 '--keyserver', 'keyserver.ubuntu.com',
-                 '--recv-keys', key])
+def install_key(key_url, keyring_file):
+    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+        _check_call(['curl', '-sSL', key_url,
+                     '-O', temp_file])
+        _check_call(["gpg", "--dearmor",
+                     "-o", keyring_file, temp_file])
 
 
 def run_apt_update():
@@ -148,13 +162,13 @@ def install_repo(repo_name, repo_type, config, linux_distro):
     # if not linux_distro provided, try to guess it
     if not linux_distro:
         linux_distro = get_linux_distro_version()
+
     content = 'deb ' + url + ' ' + linux_distro + ' main\n'
     full_path = get_sources_list_file_path(repo_name, repo_type)
 
     if isfile(full_path):
         warn('gzdev file with the repositoy already exists in the system\n[' + full_path + ']')
         return
-
     install_key(key)
 
     try:
@@ -163,7 +177,6 @@ def install_repo(repo_name, repo_type, config, linux_distro):
         f.close()
     except PermissionError:
         print('No permissiong to install ' + full_path + '. Run the script with sudo.')
-
     run_apt_update()
 
 
