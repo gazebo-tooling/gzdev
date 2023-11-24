@@ -31,12 +31,7 @@ from docopt import docopt
 
 import yaml
 
-# python3-distro is not available in Xenial. platform is deprecated
-# in favor of distro
-try:
-    import distro
-except ImportError:
-    import platform
+import distro
 
 
 def _check_call(cmd):
@@ -81,28 +76,8 @@ def load_project(project, config):
     error('Unknown project: ' + project)
 
 
-def get_linux_distro_version():
-    # Handle both: distro module and old platform
-    try:
-        return distro.codename()
-    except NameError:
-        return platform.linux_distribution()[2]
-
-
 def get_linux_distro():
-    # Handle both: distro module and old platform
-    try:
-        distro_str = distro.id()
-    except NameError:
-        distro_str = platform.linux_distribution()[0]
-
-    # Probably not necessary with distro.id, but retained for compatibility
-    if 'Debian' in distro_str:
-        return 'debian'
-    elif 'Ubuntu' in distro_str:
-        return 'ubuntu'
-    else:
-        return distro_str.lower()
+    return distro.id().lower()
 
 
 def get_repo_key(repo_name, config):
@@ -149,7 +124,7 @@ def install_repo(repo_name, repo_type, config, linux_distro, keyserver):
     key = get_repo_key(repo_name, config)
     # if not linux_distro provided, try to guess it
     if not linux_distro:
-        linux_distro = get_linux_distro_version()
+        linux_distro = distro.codename()
     content = 'deb ' + url + ' ' + linux_distro + ' main\n'
     full_path = get_sources_list_file_path(repo_name, repo_type)
 
