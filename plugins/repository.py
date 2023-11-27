@@ -21,6 +21,7 @@ Options:
         --version               Show gzdev's version
 """
 
+import distro
 import os
 import pathlib
 import re
@@ -28,12 +29,9 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-
-from docopt import docopt
-
 import yaml
 
-import distro
+from docopt import docopt
 
 
 def _check_call(cmd):
@@ -122,7 +120,6 @@ def assert_key_in_file(key, key_path):
     output = subprocess.check_output(
         ['gpg', '--show-keys', key_path])
 
-    print(output.decode("ascii"))
     if key not in output.decode("ascii"):
         error(f"Key {key} was not found in file {key_path}")
 
@@ -231,7 +228,7 @@ def process_input(args, config):
 
 def main():
     try:
-        args = normalize_args(docopt(__doc__, version='gzdev-repository 0.1.0'))
+        args = normalize_args(docopt(__doc__, version='gzdev-repository 0.2.0'))
         config = load_config_file()
         validate_input(args, config)
         process_input(args, config)
