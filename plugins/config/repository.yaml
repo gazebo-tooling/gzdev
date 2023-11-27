@@ -2,6 +2,7 @@
 repositories:
     - name: osrf
       key: D2486D2DD83DB69272AFE98867170598AF249743
+      key_url: https://packages.osrfoundation.org/gazebo.gpg
       linux_distro: ubuntu
       types:
           - name: stable
@@ -12,6 +13,7 @@ repositories:
             url: http://packages.osrfoundation.org/gazebo/ubuntu-nightly
     - name: osrf
       key: D2486D2DD83DB69272AFE98867170598AF249743
+      key_url: https://packages.osrfoundation.org/gazebo.gpg
       linux_distro: debian
       types:
           - name: stable
