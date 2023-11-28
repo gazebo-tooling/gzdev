@@ -34,6 +34,7 @@ jobs:
       - name: Smoke system tests
         run: |
           python3 gzdev.py repository list
+          python3 gzdev.py repository enable osrf stable
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:focal --vol /tmp:/foo::/tmp:/bar --rocker-args '--dev-helpers'
