@@ -3,6 +3,7 @@
 repositories:
     - name: osrf
       key: ABC1234567890
+      key_url: https://lala/foo.gpg
       linux_distro: ubuntu
       types:
           - name: stable
@@ -11,6 +12,7 @@ repositories:
             url: http://prerelease-ubuntu
     - name: osrf
       key: ABC1234567890
+      key_url: https://lala/foo.gpg
       linux_distro: debian
       types:
           - name: stable
