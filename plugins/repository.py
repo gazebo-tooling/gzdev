@@ -204,13 +204,16 @@ def normalize_args(args):
     return action, repo_name, repo_type, project, linux_distro
 
 
-def validate_input(args, config):
-    action, repo_name, repo_type, project, force_linux_distro = args
+def validate_input(args):
+    if args.keyserver:
+        warn('--keyserver option is deprecated. It is safe to remove it')
 
-    if (action == 'enable' or action == 'disable' or action == 'list'):
+    if (args.action == 'enable' or
+            args.action == 'disable' or
+            args.action == 'list'):
         pass
     else:
-        error('Unknown action: ' + action)
+        error('Unknown action: ' + args.action)
 
 
 def process_input(args, config):
@@ -228,9 +231,10 @@ def process_input(args, config):
 
 def main():
     try:
-        args = normalize_args(docopt(__doc__, version='gzdev-repository 0.2.0'))
+        args = normalize_args(docopt(__doc__,
+                                     version='gzdev-repository 0.2.0'))
         config = load_config_file()
-        validate_input(args, config)
+        validate_input(args)
         process_input(args, config)
     except KeyboardInterrupt:
         print('repository was stopped with a Keyboard Interrupt.\n')
