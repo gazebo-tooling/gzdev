@@ -113,7 +113,7 @@ def get_sources_list_file_path(repo_name, repo_type):
 
 
 def key_filepath(repo_name, repo_type):
-    return f"/usr/share/keyrings/{repo_name}_{repo_type}.gpg"
+    return f"/usr/share/keyrings/_gzdev_{repo_name}_{repo_type}.gpg"
 
 
 def assert_key_in_file(key, key_path):
