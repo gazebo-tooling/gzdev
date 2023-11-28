@@ -205,7 +205,7 @@ def normalize_args(args):
 
 
 def validate_input(args):
-    if args.keyserver:
+    if 'keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
 
     if (args.action == 'enable'
