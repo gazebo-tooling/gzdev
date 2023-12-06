@@ -22,9 +22,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt --user ; fi
-          find ${HOME} -name *docopt*
+          pip list -v 
+          pip list -v --user || true
+          pip show docopt --user || true
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          find / -name *docopt*
+          pip show docopt
+          pip list -v
           echo "/usr/local/bin" >> $GITHUB_PATH
       - name: Lint with flake8
         run: |
