@@ -35,7 +35,7 @@ jobs:
           python3 plugins/*_TEST.py
       - name: Smoke system tests
         run: |
-          sudo env "PYTHONPATH=/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages" python3 ./gzdev.py repository enable osrf stable
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" python3 ./gzdev.py repository enable osrf stable
           python3 gzdev.py repository list
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic
