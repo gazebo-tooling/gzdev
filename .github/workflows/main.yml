@@ -27,12 +27,14 @@ jobs:
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --ignore=D101,D102,D103 --max-complexity=10 --max-line-length=127 --statistics
+          flake8 . --count --ignore=D101,D102,D103,W503 --max-complexity=10 --max-line-length=127 --statistics
       - name: Test plugins _TEST.py
         run: |
           python3 plugins/*_TEST.py
       - name: Smoke system tests
         run: |
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+            python3 ./gzdev.py repository enable osrf stable
           python3 gzdev.py repository list
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic

@@ -21,22 +21,17 @@ Options:
         --version               Show gzdev's version
 """
 
+import distro
+import os
 import pathlib
 import re
 import subprocess
 import sys
-from os.path import isfile
-
-from docopt import docopt
-
+import urllib.error
+import urllib.request
 import yaml
 
-# python3-distro is not available in Xenial. platform is deprecated
-# in favor of distro
-try:
-    import distro
-except ImportError:
-    import platform
+from docopt import docopt
 
 
 def _check_call(cmd):
@@ -81,34 +76,22 @@ def load_project(project, config):
     error('Unknown project: ' + project)
 
 
-def get_linux_distro_version():
-    # Handle both: distro module and old platform
-    try:
-        return distro.codename()
-    except NameError:
-        return platform.linux_distribution()[2]
-
-
 def get_linux_distro():
-    # Handle both: distro module and old platform
-    try:
-        distro_str = distro.id()
-    except NameError:
-        distro_str = platform.linux_distribution()[0]
-
-    # Probably not necessary with distro.id, but retained for compatibility
-    if 'Debian' in distro_str:
-        return 'debian'
-    elif 'Ubuntu' in distro_str:
-        return 'ubuntu'
-    else:
-        return distro_str.lower()
+    return distro.id().lower()
 
 
 def get_repo_key(repo_name, config):
     for p in config['repositories']:
         if p['name'] == repo_name:
             return p['key']
+
+    error('No key in repo: ' + repo_name)
+
+
+def get_repo_key_url(repo_name, config):
+    for p in config['repositories']:
+        if p['name'] == repo_name:
+            return p['key_url']
 
     error('No key in repo: ' + repo_name)
 
@@ -129,44 +112,78 @@ def get_sources_list_file_path(repo_name, repo_type):
     return directory + '/' + filename
 
 
-def install_key(key, keyserver):
-    _check_call(['apt-key', 'adv',
-                 '--keyserver', keyserver,
-                 '--recv-keys', key])
+def key_filepath(repo_name, repo_type):
+    return f"/usr/share/keyrings/_gzdev_{repo_name}_{repo_type}.gpg"
+
+
+def assert_key_in_file(key, key_path):
+    output = subprocess.check_output(
+        ['gpg', '--show-keys', key_path])
+
+    if key not in output.decode("ascii"):
+        error(f"Key {key} was not found in file {key_path}")
+
+
+def download_key(repo_name, repo_type, key_url):
+    key_path = key_filepath(repo_name, repo_type)
+    if os.path.exists(key_path):
+        warn(f"keyring gpg file already exists in the system: {key_path}\n"
+             "Overwritting to grab the new one.")
+        os.remove(key_path)
+    try:
+        response = urllib.request.urlopen(key_url)
+        if response.code == 200:
+            with open(key_path, "wb") as file:
+                file.write(response.read())
+        else:
+            error(response.code)
+    except urllib.error.HTTPError as e:
+        error(f"HTTPError: {e.code}")
+    except urllib.error.URLError as e:
+        error(f"URLError: {e.reason}")
+
+    return key_path
+
+
+def remove_deprecated_apt_key(key):
+    _check_call(['apt-key', 'del', key])
 
 
 def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(project_list, config, linux_distro, keyserver):
+def install_repos(project_list, config, linux_distro):
     for p in project_list:
-        install_repo(p['name'], p['type'], config, linux_distro, keyserver)
+        install_repo(p['name'], p['type'], config, linux_distro)
 
 
-def install_repo(repo_name, repo_type, config, linux_distro, keyserver):
+def install_repo(repo_name, repo_type, config, linux_distro):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
-    # if not linux_distro provided, try to guess it
-    if not linux_distro:
-        linux_distro = get_linux_distro_version()
-    content = 'deb ' + url + ' ' + linux_distro + ' main\n'
-    full_path = get_sources_list_file_path(repo_name, repo_type)
-
-    if isfile(full_path):
-        warn('gzdev file with the repositoy already exists in the system\n[' + full_path + ']')
-        return
-
-    install_key(key, keyserver)
+    key_url = get_repo_key_url(repo_name, config)
 
     try:
+        key_path = download_key(repo_name, repo_type, key_url)
+        assert_key_in_file(key, key_path)
+
+        # if not linux_distro provided, try to guess it
+        if not linux_distro:
+            linux_distro = distro.codename()
+
+        content = f"deb [signed-by={key_path}] {url} {linux_distro} main"
+        full_path = get_sources_list_file_path(repo_name, repo_type)
+        if os.path.isfile(full_path):
+            warn("gzdev file with the repositoy already exists in the system:"
+                 f"{full_path}. \n Overwritting to use new signed-by.")
+
         f = open(full_path, 'w')
         f.write(content)
         f.close()
-    except PermissionError:
-        print('No permissiong to install ' + full_path + '. Run the script with sudo.')
 
-    run_apt_update()
+        run_apt_update()
+    except PermissionError:
+        print('No permissiong to make system file modifications. Run the script with sudo.')
 
 
 def disable_repo(repo_name):
@@ -183,39 +200,37 @@ def normalize_args(args):
         linux_distro = force_linux_distro
     else:
         linux_distro = None
-    keyserver = args['--keyserver'] if args['--keyserver'] else \
-        'keyserver.ubuntu.com'
+    if '--keyserver' in args:
+        warn('--keyserver option is deprecated. It is safe to remove it')
+    return action, repo_name, repo_type, project, linux_distro
 
-    return action, repo_name, repo_type, project, linux_distro, keyserver
 
-
-def validate_input(args, config):
-    action, repo_name, repo_type, project, force_linux_distro, keyserver = args
-
-    if (action == 'enable' or action == 'disable' or action == 'list'):
+def validate_input(args):
+    if 'enable' or 'disable' or 'list' in args['ACTION']:
         pass
     else:
-        error('Unknown action: ' + action)
+        error('Unknown action: ' + args.action)
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro, keyserver = args
+    action, repo_name, repo_type, project, linux_distro = args
 
     if (action == 'enable'):
         if project:
             project_list = load_project(project, config)
-            install_repos(project_list, config, linux_distro, keyserver)
+            install_repos(project_list, config, linux_distro)
         else:
-            install_repo(repo_name, repo_type, config, linux_distro, keyserver)
+            install_repo(repo_name, repo_type, config, linux_distro)
     elif (action == 'disable'):
         disable_repo(repo_name)
 
 
 def main():
     try:
-        args = normalize_args(docopt(__doc__, version='gzdev-repository 0.1.0'))
+        args = normalize_args(docopt(__doc__,
+                                     version='gzdev-repository 0.2.0'))
         config = load_config_file()
-        validate_input(args, config)
+        validate_input(args)
         process_input(args, config)
     except KeyboardInterrupt:
         print('repository was stopped with a Keyboard Interrupt.\n')
