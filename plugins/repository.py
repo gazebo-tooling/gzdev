@@ -200,14 +200,12 @@ def normalize_args(args):
         linux_distro = force_linux_distro
     else:
         linux_distro = None
-
+    if '--keyserver' in args:
+        warn('--keyserver option is deprecated. It is safe to remove it')
     return action, repo_name, repo_type, project, linux_distro
 
 
 def validate_input(args):
-    if '--keyserver' in args:
-        warn('--keyserver option is deprecated. It is safe to remove it')
-
     if 'enable' or 'disable' or 'list' in args['ACTION']:
         pass
     else:
