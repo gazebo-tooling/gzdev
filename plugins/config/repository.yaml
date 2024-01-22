@@ -130,13 +130,6 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    # Use pre-releases for gz-sim for testing gz-msgs 10.1.0
-    - name: gz-sim8
-      repositories:
-          - name: osrf
-            type: stable
-          - name: osrf
-            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
