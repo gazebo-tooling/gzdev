@@ -6,7 +6,7 @@ Actions related to adding/modifying apt repositories for ignition.
 Usage:
         gzdev repository (ACTION) [<repo-name>] [<repo-type>]
             [--project=<project_name>] [--force-linux-distro=<distro>]
-            [--keyserver=<keyserver>]
+            [--keyserver=<keyserver>] [--no-gpg-check]
         gzdev repository list
         gzdev repository (-h | --help)
         gzdev repository --version
@@ -19,6 +19,9 @@ Action:
 Options:
         -h --help               Show this screen
         --version               Show gzdev's version
+        --no-gpg-check          Do not run a gpg check for validating the key
+                                downloaded in enable action
+                                (avoid gpg dependency)
 """
 
 import distro
@@ -158,14 +161,15 @@ def install_repos(project_list, config, linux_distro):
         install_repo(p['name'], p['type'], config, linux_distro)
 
 
-def install_repo(repo_name, repo_type, config, linux_distro):
+def install_repo(repo_name, repo_type, config, linux_distro, no_gpg_check):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
     key_url = get_repo_key_url(repo_name, config)
 
     try:
         key_path = download_key(repo_name, repo_type, key_url)
-        assert_key_in_file(key, key_path)
+        if not no_gpg_check:
+            assert_key_in_file(key, key_path)
 
         # if not linux_distro provided, try to guess it
         if not linux_distro:
@@ -196,13 +200,14 @@ def normalize_args(args):
     repo_type = args['<repo-type>'] if args['<repo-type>'] else 'stable'
     project = args['--project']
     force_linux_distro = args['--force-linux-distro']
+    no_gpg_check = True if '--no_gpg_check' in args else False
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
         linux_distro = None
     if '--keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
-    return action, repo_name, repo_type, project, linux_distro
+    return action, repo_name, repo_type, project, linux_distro, no_gpg_check
 
 
 def validate_input(args):
@@ -213,14 +218,18 @@ def validate_input(args):
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro = args
+    action, repo_name, repo_type, project, linux_distro, no_gpg_check = args
 
     if (action == 'enable'):
         if project:
             project_list = load_project(project, config)
             install_repos(project_list, config, linux_distro)
         else:
-            install_repo(repo_name, repo_type, config, linux_distro)
+            install_repo(repo_name,
+                         repo_type,
+                         config,
+                         linux_distro,
+                         no_gpg_check)
     elif (action == 'disable'):
         disable_repo(repo_name)
 
