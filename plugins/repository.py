@@ -166,6 +166,9 @@ def install_repo(repo_name, repo_type, config, linux_distro, no_gpg_check):
     key = get_repo_key(repo_name, config)
     key_url = get_repo_key_url(repo_name, config)
 
+    # Bionic gpg has no gpg --show-keys option
+    no_gpg_check = True if linux_distro == 'bionic' else no_gpg_check
+
     try:
         key_path = download_key(repo_name, repo_type, key_url)
         if not no_gpg_check:
