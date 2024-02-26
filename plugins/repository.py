@@ -6,7 +6,7 @@ Actions related to adding/modifying apt repositories for ignition.
 Usage:
         gzdev repository (ACTION) [<repo-name>] [<repo-type>]
             [--project=<project_name>] [--force-linux-distro=<distro>]
-            [--keyserver=<keyserver>] [--no-gpg-check]
+            [--keyserver=<keyserver>] [--gpg-check]
         gzdev repository list
         gzdev repository (-h | --help)
         gzdev repository --version
@@ -19,9 +19,9 @@ Action:
 Options:
         -h --help               Show this screen
         --version               Show gzdev's version
-        --no-gpg-check          Do not run a gpg check for validating the key
+        --gpg-check             Do run a gpg check for validating the key
                                 downloaded in enable action
-                                (avoid gpg dependency)
+                                (need the gpg binary)
 """
 
 import distro
@@ -161,17 +161,14 @@ def install_repos(project_list, config, linux_distro):
         install_repo(p['name'], p['type'], config, linux_distro)
 
 
-def install_repo(repo_name, repo_type, config, linux_distro, no_gpg_check):
+def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
     key_url = get_repo_key_url(repo_name, config)
 
-    # Bionic gpg has no gpg --show-keys option
-    no_gpg_check = True if linux_distro == 'bionic' else no_gpg_check
-
     try:
         key_path = download_key(repo_name, repo_type, key_url)
-        if not no_gpg_check:
+        if gpg_check:
             assert_key_in_file(key, key_path)
 
         # if not linux_distro provided, try to guess it
@@ -203,14 +200,14 @@ def normalize_args(args):
     repo_type = args['<repo-type>'] if args['<repo-type>'] else 'stable'
     project = args['--project']
     force_linux_distro = args['--force-linux-distro']
-    no_gpg_check = True if '--no_gpg_check' in args else False
+    gpg_check = args['--gpg_check'] if '--gpg_check' in args else False
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
         linux_distro = None
     if '--keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
-    return action, repo_name, repo_type, project, linux_distro, no_gpg_check
+    return action, repo_name, repo_type, project, linux_distro, gpg_check
 
 
 def validate_input(args):
@@ -221,7 +218,7 @@ def validate_input(args):
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro, no_gpg_check = args
+    action, repo_name, repo_type, project, linux_distro, gpg_check = args
 
     if (action == 'enable'):
         if project:
@@ -232,7 +229,7 @@ def process_input(args, config):
                          repo_type,
                          config,
                          linux_distro,
-                         no_gpg_check)
+                         gpg_check)
     elif (action == 'disable'):
         disable_repo(repo_name)
 
