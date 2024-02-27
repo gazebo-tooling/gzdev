@@ -69,14 +69,17 @@ def load_config_file(config_file_path='config/repository.yaml'):
 
 
 def load_project(project, config):
+    ret = []
     for p in config['projects']:
         pattern = re.compile(p['name'])
         if pattern.search(project):
-            return p['repositories']
-            # stop in the first match
+            ret = p['repositories']
             break
 
-    error('Unknown project: ' + project)
+    if not ret:
+        error('Unknown project: ' + project)
+
+    return ret
 
 
 def get_linux_distro():
