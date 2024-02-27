@@ -156,9 +156,9 @@ def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(project_list, config, linux_distro):
+def install_repos(project_list, config, linux_distro, gpg_check):
     for p in project_list:
-        install_repo(p['name'], p['type'], config, linux_distro)
+        install_repo(p['name'], p['type'], config, linux_distro, gpg_check)
 
 
 def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
@@ -223,7 +223,7 @@ def process_input(args, config):
     if (action == 'enable'):
         if project:
             project_list = load_project(project, config)
-            install_repos(project_list, config, linux_distro)
+            install_repos(project_list, config, linux_distro, gpg_check)
         else:
             install_repo(repo_name,
                          repo_type,
