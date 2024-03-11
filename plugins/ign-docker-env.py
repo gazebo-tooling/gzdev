@@ -96,7 +96,7 @@ def build_rocker_command(igniton_release, linux_distro, docker_args, vol_args):
     cmd += ['--ignition', f'{igniton_release}:{linux_distro_release}']
     cmd += docker_args if docker_args else []
     cmd += vol_args if vol_args else []
-    cmd += [linux_distro, '/bin/bash']
+    cmd += [linux_distro]
     return cmd
 
 
