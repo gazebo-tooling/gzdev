@@ -65,14 +65,25 @@ def load_config_file(config_file_path='config/repository.yaml'):
             exit(-1)
 
 
-def get_project_config(project, config):
+def get_first_valid_project_config(project, config, linux_distro):
     """Returns the project configuration from yaml that correspond
     to the first match while searching starting from top to bottom
     """
     for p in config['projects']:
         pattern = re.compile(p['name'])
+
         if pattern.search(project):
-            return p
+            # project name found, check that requirements are met
+            try:
+                # 1. If distribution requirement exists check it
+                if linux_distro in p['distributions'][distro.id()]:
+                    return p
+            except KeyError as kerror:
+                # 2. No disitribution requirement set
+                if 'distributions' in str(kerror):
+                    return p
+                assert f"Unexpected keyerror: #{str(kerror)}"
+
     return None
 
 
@@ -213,9 +224,10 @@ def validate_input(args):
 
 
 def process_project_install(project, config, linux_distro, dry_run=False):
-    project_config = get_project_config(project, config)
+    project_config = get_first_valid_project_config(project, config, linux_distro)
     if not project_config:
         error('Unknown project: ' + project)
+
     if not dry_run:  # useful for tests
         install_repos(get_repositories_config(project_config),
                       config,

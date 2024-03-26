@@ -59,24 +59,52 @@ class TestRepo_URL(TestBase):
 class TestProjectNameResolution(TestBase):
 
     def test_direct_match(self):
-        project_config = repository.get_project_config('ignition-math6',
-                                                       self.config)
+        project_config = \
+            repository.get_first_valid_project_config('ignition-math6',
+                                                      self.config,
+                                                      'jammy')
         for p in repository.get_repositories_config(project_config):
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'stable')
 
     def test_non_exist(self):
-        self.assertIsNone(repository.get_project_config('fooooo', self.config))
+        self.assertIsNone(
+            repository.get_first_valid_project_config('fooooo',
+                                                      self.config,
+                                                      'jammy'))
 
     def test_regexp(self):
-        project_config = repository.get_project_config('ignition-plugin',
-                                                       self.config)
+        project_config = \
+            repository.get_first_valid_project_config('ignition-plugin',
+                                                      self.config,
+                                                      'jammy')
         for p in repository.get_repositories_config(project_config):
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'regexp')
 
+    def test_precedence(self):
+        project_config = \
+            repository.get_first_valid_project_config('ignition-transport7',
+                                                      self.config,
+                                                      'jammy')
+        for p in repository.get_repositories_config(project_config):
+            self.assertEqual(p['name'], 'osrf')
+            self.assertEqual(p['type'], 'stable')
+
 
 class TestProjectInstall(TestBase):
+
+    def test_no_distributions(self):
+        repository.process_project_install('ignition-math6',
+                                           self.config,
+                                           'jammy',
+                                           dry_run=True)
+
+    def test_distributions(self):
+        repository.process_project_install('ignition-transport7',
+                                           self.config,
+                                           'jammy',
+                                           dry_run=True)
 
     def test_non_exist(self):
         with self.assertRaises(SystemExit):
