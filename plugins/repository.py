@@ -65,15 +65,19 @@ def load_config_file(config_file_path='config/repository.yaml'):
             exit(-1)
 
 
-def load_project(project, config):
+def get_project_config(project, config):
+    """Returns the project configuration from yaml that correspond
+    to the first match while searching starting from top to bottom
+    """
     for p in config['projects']:
         pattern = re.compile(p['name'])
         if pattern.search(project):
-            return p['repositories']
-            # stop in the first match
-            break
+            return p
+    return None
 
-    error('Unknown project: ' + project)
+
+def get_repositories_config(project_config):
+    return project_config['repositories']
 
 
 def get_linux_distro():
@@ -153,8 +157,8 @@ def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(project_list, config, linux_distro):
-    for p in project_list:
+def install_repos(repos_list, config, linux_distro):
+    for p in repos_list:
         install_repo(p['name'], p['type'], config, linux_distro)
 
 
@@ -217,8 +221,12 @@ def process_input(args, config):
 
     if (action == 'enable'):
         if project:
-            project_list = load_project(project, config)
-            install_repos(project_list, config, linux_distro)
+            project_config = get_project_config(project, config)
+            if not project_config:
+                error('Unknown project: ' + project)
+            install_repos(get_repositories_config(project_config),
+                          config,
+                          linux_distro)
         else:
             install_repo(repo_name, repo_type, config, linux_distro)
     elif (action == 'disable'):

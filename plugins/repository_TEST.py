@@ -59,18 +59,19 @@ class TestRepo_URL(TestBase):
 class TestProjectNameResolution(TestBase):
 
     def test_direct_match(self):
-        projects = repository.load_project('ignition-math6', self.config)
-        for p in projects:
+        project_config = repository.get_project_config('ignition-math6',
+                                                       self.config)
+        for p in repository.get_repositories_config(project_config):
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'stable')
 
     def test_non_exist(self):
-        with self.assertRaises(SystemExit):
-            repository.load_project('fooooo', self.config)
+        self.assertIsNone(repository.get_project_config('fooooo', self.config))
 
     def test_regexp(self):
-        projects = repository.load_project('ignition-plugin', self.config)
-        for p in projects:
+        project_config = repository.get_project_config('ignition-plugin',
+                                                       self.config)
+        for p in repository.get_repositories_config(project_config):
             self.assertEqual(p['name'], 'osrf')
             self.assertEqual(p['type'], 'regexp')
 
