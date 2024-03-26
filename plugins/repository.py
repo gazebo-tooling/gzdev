@@ -171,10 +171,6 @@ def install_repo(repo_name, repo_type, config, linux_distro):
         key_path = download_key(repo_name, repo_type, key_url)
         assert_key_in_file(key, key_path)
 
-        # if not linux_distro provided, try to guess it
-        if not linux_distro:
-            linux_distro = distro.codename()
-
         content = f"deb [signed-by={key_path}] {url} {linux_distro} main"
         full_path = get_sources_list_file_path(repo_name, repo_type)
         if os.path.isfile(full_path):
@@ -203,7 +199,7 @@ def normalize_args(args):
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
-        linux_distro = None
+        linux_distro = distro.codename()
     if '--keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
     return action, repo_name, repo_type, project, linux_distro
