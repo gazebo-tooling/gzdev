@@ -212,18 +212,22 @@ def validate_input(args):
         error('Unknown action: ' + args.action)
 
 
+def process_project_install(project, config, linux_distro, dry_run=False):
+    project_config = get_project_config(project, config)
+    if not project_config:
+        error('Unknown project: ' + project)
+    if not dry_run:  # useful for tests
+        install_repos(get_repositories_config(project_config),
+                      config,
+                      linux_distro)
+
+
 def process_input(args, config):
     action, repo_name, repo_type, project, linux_distro = args
 
     if (action == 'enable'):
-        if project:
-            project_config = get_project_config(project, config)
-            if not project_config:
-                error('Unknown project: ' + project)
-            install_repos(get_repositories_config(project_config),
-                          config,
-                          linux_distro)
-        else:
+        process_project_install(project, config, linux_distro) \
+            if project else \
             install_repo(repo_name, repo_type, config, linux_distro)
     elif (action == 'disable'):
         disable_repo(repo_name)

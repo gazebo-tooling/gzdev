@@ -76,5 +76,15 @@ class TestProjectNameResolution(TestBase):
             self.assertEqual(p['type'], 'regexp')
 
 
+class TestProjectInstall(TestBase):
+
+    def test_non_exist(self):
+        with self.assertRaises(SystemExit):
+            repository.process_project_install('fooooo',
+                                               self.config,
+                                               'jammy',
+                                               dry_run=True)
+
+
 if __name__ == '__main__':
     unittest.main()
