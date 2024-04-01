@@ -78,14 +78,17 @@ def get_first_valid_project_config(project, config, linux_distro):
         if pattern.search(project):
             # project name found, check that requirements are met
             try:
-                # 1. If distribution requirement exists check it
-                if linux_distro in p['distributions'][distro.id()]:
+                requirements = p['requirements']
+                if linux_distro in requirements['distributions'][distro.id()]:
                     return p
             except KeyError as kerror:
-                # 2. No disitribution requirement set
+                # 0. No requirments set
+                if 'requirements' in str(kerror):
+                    return p
+                # 1. No disitribution requirement set
                 if 'distributions' in str(kerror):
                     return p
-                assert f"Unexpected keyerror: #{str(kerror)}"
+                assert f'Unexpected keyerror: #{str(kerror)}'
 
     return None
 

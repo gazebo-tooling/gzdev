@@ -27,16 +27,18 @@ projects:
           - name: osrf
             type: stable
     - name: ignition-transport7
-      distributions:
-        ubuntu:
-          - no-existing-distro
+      requirements:
+        distributions:
+          ubuntu:
+            - no-existing-distro
       repositories:
           - name: osrf
             type: broken
     - name: ignition-transport7
-      distributions:
-        ubuntu:
-          - jammy
+      requirements:
+        distributions:
+          ubuntu:
+            - jammy
       repositories:
           - name: osrf
             type: stable
