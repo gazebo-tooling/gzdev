@@ -232,7 +232,8 @@ def validate_input(args):
         error('Unknown action: ' + args.action)
 
 
-def process_project_install(project, config, linux_distro, dry_run=False):
+def process_project_install(project, config, linux_distro, gpg_check,
+                            dry_run=False):
     project_config = get_first_valid_project_config(project, config, linux_distro)
     if not project_config:
         error('Unknown project: ' + project)
@@ -240,15 +241,22 @@ def process_project_install(project, config, linux_distro, dry_run=False):
     if not dry_run:  # useful for tests
         install_repos(get_repositories_config(project_config),
                       config,
-                      linux_distro)
+                      linux_distro,
+                      gpg_check)
 
 
 def process_input(args, config):
     action, repo_name, repo_type, project, linux_distro, gpg_check = args
 
     if (action == 'enable'):
-        process_project_install(project, config, linux_distro) \
-            if project else \
+        if project:
+            # project dependant installation
+            process_project_install(project,
+                                    config,
+                                    linux_distro,
+                                    gpg_check)
+        else:
+            # generic repository installation
             install_repo(repo_name,
                          repo_type,
                          config,
