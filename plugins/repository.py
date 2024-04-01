@@ -6,7 +6,7 @@ Actions related to adding/modifying apt repositories for ignition.
 Usage:
         gzdev repository (ACTION) [<repo-name>] [<repo-type>]
             [--project=<project_name>] [--force-linux-distro=<distro>]
-            [--keyserver=<keyserver>]
+            [--keyserver=<keyserver>] [--gpg-check]
         gzdev repository list
         gzdev repository (-h | --help)
         gzdev repository --version
@@ -19,6 +19,9 @@ Action:
 Options:
         -h --help               Show this screen
         --version               Show gzdev's version
+        --gpg-check             Do run a gpg check for validating the key
+                                downloaded in enable action
+                                (need the gpg binary)
 """
 
 import distro
@@ -168,19 +171,24 @@ def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(repos_list, config, linux_distro):
+def install_repos(repos_list, config, linux_distro, gpg_check):
     for p in repos_list:
-        install_repo(p['name'], p['type'], config, linux_distro)
+        install_repo(p['name'], p['type'], config, linux_distro, gpg_check)
 
 
-def install_repo(repo_name, repo_type, config, linux_distro):
+def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
     key_url = get_repo_key_url(repo_name, config)
 
     try:
         key_path = download_key(repo_name, repo_type, key_url)
-        assert_key_in_file(key, key_path)
+        if gpg_check:
+            assert_key_in_file(key, key_path)
+
+        # if not linux_distro provided, try to guess it
+        if not linux_distro:
+            linux_distro = distro.codename()
 
         content = f"deb [signed-by={key_path}] {url} {linux_distro} main"
         full_path = get_sources_list_file_path(repo_name, repo_type)
@@ -207,13 +215,14 @@ def normalize_args(args):
     repo_type = args['<repo-type>'] if args['<repo-type>'] else 'stable'
     project = args['--project']
     force_linux_distro = args['--force-linux-distro']
+    gpg_check = args['--gpg_check'] if '--gpg_check' in args else False
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
         linux_distro = distro.codename()
     if '--keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
-    return action, repo_name, repo_type, project, linux_distro
+    return action, repo_name, repo_type, project, linux_distro, gpg_check
 
 
 def validate_input(args):
@@ -235,12 +244,16 @@ def process_project_install(project, config, linux_distro, dry_run=False):
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro = args
+    action, repo_name, repo_type, project, linux_distro, gpg_check = args
 
     if (action == 'enable'):
         process_project_install(project, config, linux_distro) \
             if project else \
-            install_repo(repo_name, repo_type, config, linux_distro)
+            install_repo(repo_name,
+                         repo_type,
+                         config,
+                         linux_distro,
+                         gpg_check)
     elif (action == 'disable'):
         disable_repo(repo_name)
 

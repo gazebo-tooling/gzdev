@@ -284,6 +284,13 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    # Use pre-releases for gz-sim for testing gz-transport 13.2.0
+    - name: gz-sim8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
     # generic regexp
     - name: gazebo.*
       repositories:
