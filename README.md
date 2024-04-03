@@ -183,8 +183,8 @@ project name and other requirements is the only one executed.
      * `repositories:` list of repositories to configure into the system
        * `name:` name of the repository to install as named inside `repositories:` section
        * `type:` name of the type of repository to install matching the `repositories:` section
-     * `requirements:` {optional} section to list requirements to met for repositories installations
-       * `distributions:` {optional} subsection for requirements on the platform being run
+     * `requirements:` [optional] section to list requirements to met for repositories installations
+       * `distributions:` [optional] subsection for requirements on the platform being run
          * `{distribution_name}:` distribution name (i.e ubuntu) as in `distro.id()` module call
            * `{version_name}:` release name inside the distribution (i.e jammy) as in `distro.codename()` module call
 
