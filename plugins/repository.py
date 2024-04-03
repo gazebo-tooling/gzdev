@@ -68,18 +68,33 @@ def load_config_file(config_file_path='config/repository.yaml'):
             exit(-1)
 
 
-def load_project(project, config):
-    ret = []
+def get_first_valid_project_config(project, config, linux_distro):
+    """Returns the project configuration from yaml that correspond
+    to the first match while searching starting from top to bottom
+    """
     for p in config['projects']:
         pattern = re.compile(p['name'])
+
         if pattern.search(project):
-            ret = p['repositories']
-            break
+            # project name found, check that requirements are met
+            try:
+                requirements = p['requirements']
+                if linux_distro in requirements['distributions'][distro.id()]:
+                    return p
+            except KeyError as kerror:
+                # 0. No requirments set
+                if 'requirements' in str(kerror):
+                    return p
+                # 1. No disitribution requirement set
+                if 'distributions' in str(kerror):
+                    return p
+                assert f'Unexpected keyerror: #{str(kerror)}'
 
-    if not ret:
-        error('Unknown project: ' + project)
+    return None
 
-    return ret
+
+def get_repositories_config(project_config):
+    return project_config['repositories']
 
 
 def get_linux_distro():
@@ -159,8 +174,8 @@ def run_apt_update():
     _check_call(['apt-get', 'update'])
 
 
-def install_repos(project_list, config, linux_distro, gpg_check):
-    for p in project_list:
+def install_repos(repos_list, config, linux_distro, gpg_check):
+    for p in repos_list:
         install_repo(p['name'], p['type'], config, linux_distro, gpg_check)
 
 
@@ -207,7 +222,7 @@ def normalize_args(args):
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
-        linux_distro = None
+        linux_distro = distro.codename()
     if '--keyserver' in args:
         warn('--keyserver option is deprecated. It is safe to remove it')
     return action, repo_name, repo_type, project, linux_distro, gpg_check
@@ -220,14 +235,31 @@ def validate_input(args):
         error('Unknown action: ' + args.action)
 
 
+def process_project_install(project, config, linux_distro, gpg_check,
+                            dry_run=False):
+    project_config = get_first_valid_project_config(project, config, linux_distro)
+    if not project_config:
+        error('Unknown project: ' + project)
+
+    if not dry_run:  # useful for tests
+        install_repos(get_repositories_config(project_config),
+                      config,
+                      linux_distro,
+                      gpg_check)
+
+
 def process_input(args, config):
     action, repo_name, repo_type, project, linux_distro, gpg_check = args
 
     if (action == 'enable'):
         if project:
-            project_list = load_project(project, config)
-            install_repos(project_list, config, linux_distro, gpg_check)
+            # project dependant installation
+            process_project_install(project,
+                                    config,
+                                    linux_distro,
+                                    gpg_check)
         else:
+            # generic repository installation
             install_repo(repo_name,
                          repo_type,
                          config,

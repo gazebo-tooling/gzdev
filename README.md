@@ -151,6 +151,43 @@ stages.
 
 `gzdev repository enable --project=ignition-math6`
 
+## The repository.yaml configuration file
+
+The repository module uses a [yaml configuration](plugins/config/repository.yaml) file to specify
+the following  information used by the code.
+
+  * {} squares used to refer to keys that are variable names. Otherwise literals are expected as keys.
+  * All fields are mandatory unless noted otherwise.
+
+### repositories metadata
+
+  * `repositories` with the following format:
+     * `name:` short name used in the command line or used as an id of the repository
+     * `key:` fingerprint of the signing key of the repository. Used for verification proposes.
+     * `key_url:` signing key file (binary format) of the repository to install into the system
+     * `linux_distro:` name of the Linux distribution for this configuration
+     * `types:` flavours or types inside the Linux distribution to apply
+       * `name:` id to name the type inside the Linux distribution (i.e stable)
+       * `url:` repository url for the Linux distribution type
+
+### projects metadata
+
+The `--project` argument allows gzdev to configure group of the repositories to use and/or
+add some extra requirements.
+
+**Note:** project entries in the yaml are processed by order. The first one matching the
+project name and other requirements is the only one executed.
+
+  * `projects` with the following format:
+     * `name:` short name used as an id for the project
+     * `repositories:` list of repositories to configure into the system
+       * `name:` name of the repository to install as named inside `repositories:` section
+       * `type:` name of the type of repository to install matching the `repositories:` section
+     * `requirements:` [optional] section to list requirements to met for repositories installations
+       * `distributions:` [optional] subsection for requirements on the platform being run
+         * `{distribution_name}:` distribution name (i.e ubuntu) as in `distro.id()` module call
+           * `{version_name}:` release name inside the distribution (i.e jammy) as in `distro.codename()` module call
+
 # Support/Contribute
 * [GitHub Issue Tracker](https://github.com/gazebo-tooling/gzdev/issues) - gzdev specific questions
 * [Gazebo Answers](http://answers.gazebosim.org) - Gazebo specific questions
