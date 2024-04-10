@@ -15,6 +15,7 @@ Action:
         enable                  Enable repository in the system
         disable                 Disable repository (if present)
         list                    List repositories enabled
+        purge                   Remove all configurations installed by gzdev
 
 Options:
         -h --help               Show this screen
@@ -22,8 +23,7 @@ Options:
         --gpg-check             Do run a gpg check for validating the key
                                 downloaded in enable action
                                 (need the gpg binary)
-        --pre-cleanup           Remove all repositories and keys installed
-                                by gzdev from the system before proceding
+        --pre-cleanup           Run 'purge' action before proceeding
 """
 
 import distro
@@ -225,6 +225,9 @@ def normalize_args(args):
     force_linux_distro = args['--force-linux-distro']
     gpg_check = args['--gpg_check'] if '--gpg_check' in args else False
     pre_cleanup = args['--pre-cleanup'] if '--pre-cleanup' in args else False
+    if pre_cleanup and action != 'enable':
+        error('--pre-cleanup is only supported in the "enable" action'
+              f'(not in {action})')
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
@@ -277,6 +280,8 @@ def process_input(args, config):
                          gpg_check)
     elif (action == 'disable'):
         disable_repo(repo_name)
+    elif (action == 'purge'):
+        remove_all_installed()
 
 
 def remove_file_by_pattern(directory, pattern):
