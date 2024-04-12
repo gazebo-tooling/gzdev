@@ -6,7 +6,7 @@ Actions related to adding/modifying apt repositories for ignition.
 Usage:
         gzdev repository (ACTION) [<repo-name>] [<repo-type>]
             [--project=<project_name>] [--force-linux-distro=<distro>]
-            [--keyserver=<keyserver>] [--gpg-check]
+            [--keyserver=<keyserver>] [--gpg-check] [--pre-cleanup]
         gzdev repository list
         gzdev repository (-h | --help)
         gzdev repository --version
@@ -15,6 +15,7 @@ Action:
         enable                  Enable repository in the system
         disable                 Disable repository (if present)
         list                    List repositories enabled
+        purge                   Remove all configurations installed by gzdev
 
 Options:
         -h --help               Show this screen
@@ -22,6 +23,7 @@ Options:
         --gpg-check             Do run a gpg check for validating the key
                                 downloaded in enable action
                                 (need the gpg binary)
+        --pre-cleanup           Run 'purge' action before proceeding
 """
 
 import distro
@@ -35,6 +37,9 @@ import urllib.request
 import yaml
 
 from docopt import docopt
+
+
+GZDEV_FILE_PREFIX = '_gzdev_'
 
 
 def _check_call(cmd):
@@ -128,13 +133,13 @@ def get_repo_url(repo_name, repo_type, config):
 
 
 def get_sources_list_file_path(repo_name, repo_type):
-    filename = '_gzdev_' + repo_name + '_' + repo_type + '.list'
+    filename = f'{GZDEV_FILE_PREFIX}{repo_name}_{repo_type}.list'
     directory = '/etc/apt/sources.list.d'
     return directory + '/' + filename
 
 
 def key_filepath(repo_name, repo_type):
-    return f"/usr/share/keyrings/_gzdev_{repo_name}_{repo_type}.gpg"
+    return f"/usr/share/keyrings/{GZDEV_FILE_PREFIX}{repo_name}_{repo_type}.gpg"
 
 
 def assert_key_in_file(key, key_path):
@@ -219,13 +224,18 @@ def normalize_args(args):
     project = args['--project']
     force_linux_distro = args['--force-linux-distro']
     gpg_check = args['--gpg_check'] if '--gpg_check' in args else False
+    pre_cleanup = args['--pre-cleanup'] if '--pre-cleanup' in args else False
+    if pre_cleanup and action != 'enable':
+        error('--pre-cleanup is only supported in the "enable" action'
+              f'(not in {action})')
     if force_linux_distro:
         linux_distro = force_linux_distro
     else:
         linux_distro = distro.codename()
-    if '--keyserver' in args:
+    if '--keyserver' in args and args['--keyserver']:
         warn('--keyserver option is deprecated. It is safe to remove it')
-    return action, repo_name, repo_type, project, linux_distro, gpg_check
+    return action, repo_name, repo_type, project, linux_distro, gpg_check, \
+        pre_cleanup
 
 
 def validate_input(args):
@@ -249,7 +259,10 @@ def process_project_install(project, config, linux_distro, gpg_check,
 
 
 def process_input(args, config):
-    action, repo_name, repo_type, project, linux_distro, gpg_check = args
+    action, repo_name, repo_type, project, linux_distro, gpg_check, \
+        pre_cleanup = args
+
+    remove_all_installed() if pre_cleanup else None
 
     if (action == 'enable'):
         if project:
@@ -267,6 +280,28 @@ def process_input(args, config):
                          gpg_check)
     elif (action == 'disable'):
         disable_repo(repo_name)
+    elif (action == 'purge'):
+        remove_all_installed()
+
+
+def remove_file_by_pattern(directory, pattern):
+    for filename in os.listdir(directory):
+        if pattern.match(filename):
+            filepath = os.path.join(directory, filename)
+            try:
+                os.remove(filepath)
+                print(f'Removed: {filepath}')
+            except OSError as e:
+                print(f'Error: {filepath} - {e}')
+
+
+def remove_all_installed():
+    # Remove installed apt directories
+    remove_file_by_pattern('/etc/apt/sources.list.d/',
+                           re.compile(r'^' + GZDEV_FILE_PREFIX + '(.*)\\.list'))
+    # Remove installed keys
+    remove_file_by_pattern('/usr/share/keyrings/',
+                           re.compile(r'^' + GZDEV_FILE_PREFIX + '(.*)\\.gpg'))
 
 
 def main():

@@ -31,11 +31,27 @@ jobs:
       - name: Test plugins _TEST.py
         run: |
           python3 plugins/*_TEST.py
-      - name: Smoke system tests
+      - name: Smoke system tests for repository module
         run: |
-          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
-            python3 ./gzdev.py repository enable osrf stable
           python3 gzdev.py repository list
+          repo_to_test="osrf"
+          repo_type_to_test="stable"
+          # Test --pre-cleanup
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+              python3 ./gzdev.py repository enable ${repo_to_test} ${repo_type_to_test}
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+             python3 ./gzdev.py repository --pre-cleanup enable ${repo_to_test} ${repo_type_to_test} >log
+          grep "/etc/apt/sources.list.d/_gzdev_${repo_to_test}_${repo_type_to_test}.list" log
+          grep "/usr/share/keyrings/_gzdev_${repo_to_test}_${repo_type_to_test}.gpg" log
+          # Test the purge action
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+              python3 ./gzdev.py repository enable ${repo_to_test} ${repo_type_to_test}
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+             python3 ./gzdev.py repository purge
+          grep "/etc/apt/sources.list.d/_gzdev_${repo_to_test}_${repo_type_to_test}.list" log
+          grep "/usr/share/keyrings/_gzdev_${repo_to_test}_${repo_type_to_test}.gpg" log
+      - name: Smoke system tests for ign-docker module
+        run: |
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:focal --vol /tmp:/foo::/tmp:/bar --rocker-args '--dev-helpers'
