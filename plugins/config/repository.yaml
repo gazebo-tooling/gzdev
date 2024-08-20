@@ -33,11 +33,13 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    # Use nightlies in all main branches
+    # Use prereleases and nightlies in Ionic main branches
     - name: gz-cmake4
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-common6
@@ -45,11 +47,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-msgs11
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-fuel-tools10
@@ -57,11 +63,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-sim9
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-gui9
@@ -69,11 +79,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-launch8
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-math8
@@ -81,11 +95,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-physics8
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-plugin3
@@ -93,11 +111,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-rendering9
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-sensors9
@@ -105,11 +127,7 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
-            type: nightly
-    - name: gz-tools3
-      repositories:
-          - name: osrf
-            type: stable
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-transport14
@@ -117,14 +135,28 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-utils3
       repositories:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: sdformat15
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: prerelease
+          - name: osrf
+            type: nightly
+
+    # Use nightlies in all main branches
+    - name: gz-tools3
       repositories:
           - name: osrf
             type: stable
