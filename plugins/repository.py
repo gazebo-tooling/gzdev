@@ -306,7 +306,7 @@ def remove_all_installed():
 
 def main():
     try:
-        args = normalize_args(docopt(__doc__,
+        args = normalize_args(docopt(str(__doc__),
                                      version='gzdev-repository 0.2.0'))
         config = load_config_file()
         validate_input(args)
