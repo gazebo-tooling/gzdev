@@ -26,7 +26,7 @@ from sys import stderr
 from docopt import docopt
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='gzdev-core 0.1.0', options_first=True)
+    args = docopt(str(__doc__), version='gzdev-core 0.1.0', options_first=True)
     cmd = args['<command>']
     is_valid = {'ign-docker-env': True,
                 'repository': True}
