@@ -22,7 +22,22 @@ repositories:
             url: http://packages.osrfoundation.org/gazebo/debian-prerelease
           - name: nightly
             url: http://packages.osrfoundation.org/gazebo/debian-nightly
-
+    - name: ros2
+      key: C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+      key_url: https://raw.githubusercontent.com/ros/rosdistro/master/ros.key
+      linux_distro: ubuntu
+      types:
+        - name: main
+          url: http://packages.ros.org/ros2/ubuntu
+        - name: testing
+          url: http://packages.ros.org/ros2-testing/ubuntu
+    - name: ros-bootstrap
+      key: 4732CE706CD7B19DB0FFE74E8EDB2EF661FC880E
+      key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4732ce706cd7b19db0ffe74e8edb2ef661fc880e
+      linux_distro: ubuntu
+      types:
+          - name: main
+            url: http://repos.ros.org/repos/ros_bootstrap
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
