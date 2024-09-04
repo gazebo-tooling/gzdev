@@ -31,7 +31,7 @@ repositories:
           url: http://packages.ros.org/ros2/ubuntu
         - name: testing
           url: http://packages.ros.org/ros2-testing/ubuntu
-    - name: ros-bootstrap
+    - name: ros_bootstrap
       key: 4732CE706CD7B19DB0FFE74E8EDB2EF661FC880E
       key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4732ce706cd7b19db0ffe74e8edb2ef661fc880e
       linux_distro: ubuntu
