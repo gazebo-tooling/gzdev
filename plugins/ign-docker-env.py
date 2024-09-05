@@ -117,6 +117,7 @@ def normalize_args(args):
 
 def main():
     try:
+        assert __doc__ is not None  # make pyright happy
         ignition_version, linux_distro, docker_args, vol_args = normalize_args(
             docopt(str(__doc__), version='gzdev-docker-env 0.1.0'))
         rocker_cmd = build_rocker_command(ignition_version, linux_distro, docker_args, vol_args)
