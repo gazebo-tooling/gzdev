@@ -15,4 +15,4 @@ jobs:
           source .venv/bin/activate
           pip install -r requirements.txt
       - run: echo "$PWD/.venv/bin" >> $GITHUB_PATH
-      - uses: jakebailey/pyright-action@1a4bf406072a8d0efdf6faba94a34a096430472f # v2
+      - uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v 2.3.2

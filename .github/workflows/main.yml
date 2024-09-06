@@ -50,6 +50,14 @@ jobs:
              python3 ./gzdev.py repository purge
           grep "/etc/apt/sources.list.d/_gzdev_${repo_to_test}_${repo_type_to_test}.list" log
           grep "/usr/share/keyrings/_gzdev_${repo_to_test}_${repo_type_to_test}.gpg" log
+      - name: Smoke system tests for all the repositories
+        run: |
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+              python3 ./gzdev.py repository enable osrf stable
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+              python3 ./gzdev.py repository enable ros2 main
+          sudo env "PYTHONPATH=$pythonLocation/lib/python${{ matrix.python-version}}/site-packages" \
+              python3 ./gzdev.py repository enable ros_bootstrap main
       - name: Smoke system tests for ign-docker module
         run: |
           python3 gzdev.py ign-docker-env citadel
