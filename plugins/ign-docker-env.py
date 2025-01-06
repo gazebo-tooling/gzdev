@@ -33,8 +33,8 @@ Options:
     --vol $LOCAL_PATH:$CONTAINER_PATH   Load volumes into Docker container (separate multiple volumes with '::')
 
 Notes:
-    Valid inputs for IGN_RELEASE are 'citadel' and 'fortress'.
-    Valid inputs for the --linux-distro arg are 'ubuntu:bionic' or 'ubuntu:focal'.
+    Valid inputs for IGN_RELEASE are: 'fortress'.
+    Valid inputs for the --linux-distro arg are: 'ubuntu:focal'.
 """
 
 import os
@@ -49,10 +49,8 @@ ROCKER_CMD = ['rocker', '--x11', '--user']
 
 # TODO: use a yaml file to get this information
 # keep track of all valid versions and their default linux distro
-bionic = 'ubuntu:bionic'
 focal = 'ubuntu:focal'
 IGN_VERSIONS = {
-    'citadel': bionic,
     'fortress': focal
 }
 
