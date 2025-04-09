@@ -131,6 +131,14 @@ def get_repo_url(repo_name, repo_type, config):
 
     error('Unknown repository or type: ' + repo_name + '/' + repo_type)
 
+def get_repo_suite(repo_name, repo_type, config):
+    for p in config['repositories']:
+        if p['name'] == repo_name and p['linux_distro'].lower() == get_linux_distro():
+            for t in p['types']:
+                if t['name'] == repo_type:
+                    if 'suite' in t:
+                        return t['suite']
+                    return None
 
 def get_sources_list_file_path(repo_name, repo_type):
     filename = f'{GZDEV_FILE_PREFIX}{repo_name}_{repo_type}.list'
@@ -188,17 +196,27 @@ def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
     url = get_repo_url(repo_name, repo_type, config)
     key = get_repo_key(repo_name, config)
     key_url = get_repo_key_url(repo_name, config)
+    suite = get_repo_suite(repo_name, repo_type, config)
 
     try:
-        key_path = download_key(repo_name, repo_type, key_url)
-        if gpg_check:
-            assert_key_in_file(key, key_path)
+        trusted_or_signed_str = ""
+        if key is not None and key_url is not None:
+            key_path = download_key(repo_name, repo_type, key_url)
+            if gpg_check:
+                assert_key_in_file(key, key_path)
+            trusted_or_signed_str = f"signed-by={key_path}"
+        else:
+            trusted_or_signed_str = "trusted=yes"
 
-        # if not linux_distro provided, try to guess it
-        if not linux_distro:
-            linux_distro = distro.codename()
+        if suite is not None:
+            distro_component_or_suite_str = f"{suite}"
+        else:
+            # if not linux_distro provided, try to guess it
+            if not linux_distro:
+                linux_distro = distro.codename()
+            distro_component_or_suite_str = f"{linux_distro} main"
 
-        content = f"deb [signed-by={key_path}] {url} {linux_distro} main"
+        content = f"deb [{trusted_or_signed_str}] {url} {distro_component_or_suite_str}"
         full_path = get_sources_list_file_path(repo_name, repo_type)
         if os.path.isfile(full_path):
             warn("gzdev file with the repositoy already exists in the system:"
@@ -210,7 +228,7 @@ def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
 
         run_apt_update()
     except PermissionError:
-        print('No permissiong to make system file modifications. Run the script with sudo.')
+        print('No permission to make system file modifications. Run the script with sudo.')
 
 
 def disable_repo(repo_name):
