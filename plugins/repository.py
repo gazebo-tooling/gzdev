@@ -131,6 +131,7 @@ def get_repo_url(repo_name, repo_type, config):
 
     error('Unknown repository or type: ' + repo_name + '/' + repo_type)
 
+
 def get_repo_suite(repo_name, repo_type, config):
     for p in config['repositories']:
         if p['name'] == repo_name and p['linux_distro'].lower() == get_linux_distro():
@@ -139,6 +140,7 @@ def get_repo_suite(repo_name, repo_type, config):
                     if 'suite' in t:
                         return t['suite']
                     return None
+
 
 def get_sources_list_file_path(repo_name, repo_type):
     filename = f'{GZDEV_FILE_PREFIX}{repo_name}_{repo_type}.list'
@@ -217,6 +219,7 @@ def install_repo(repo_name, repo_type, config, linux_distro, gpg_check):
             distro_component_or_suite_str = f"{linux_distro} main"
 
         content = f"deb [{trusted_or_signed_str}] {url} {distro_component_or_suite_str}"
+        print(content)
         full_path = get_sources_list_file_path(repo_name, repo_type)
         if os.path.isfile(full_path):
             warn("gzdev file with the repositoy already exists in the system:"
