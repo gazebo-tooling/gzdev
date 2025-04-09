@@ -38,6 +38,15 @@ repositories:
       types:
           - name: main
             url: http://repos.ros.org/repos/ros_bootstrap
+    - name: eclipse-zenoh
+      key: null
+      key_url: null
+      linux_distro: ubuntu
+      types:
+          - name: stable
+            url: https://download.eclipse.org/zenoh/debian-repo/
+            suite: /
+
 # wildcards are allowed in name, entries are processed in top-down order
 # first entry matching the name is used
 projects:
@@ -90,6 +99,8 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+          - name: eclipse-zenoh
+            type: stable
     - name: gz-fuel-tools11
       repositories:
           - name: osrf
