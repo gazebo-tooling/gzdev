@@ -90,6 +90,8 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+          - name: ros2
+            type: main
     - name: gz-fuel-tools11
       repositories:
           - name: osrf
