@@ -11,7 +11,7 @@ gzdev is a command line tool that facilitates the development of the open source
 git clone https://github.com/gazebo-tooling/gzdev.git && cd gzdev
 ```
 
-2. Install the necessary python packages [docker](https://pypi.org/project/docker), [docopt](https://pypi.org/project/docker/), and [pytest](https://pypi.org/project/pytest/) (optional). Also install [rocker](https://github.com/osrf/rocker) and [ign-rocker](https://github.com/adlarkin/ign-rocker) for the `ign-docker-env` command:
+2. Install the necessary python packages [docker](https://pypi.org/project/docker/), [docopt](https://pypi.org/project/docopt/), and [pytest](https://pypi.org/project/pytest/) (optional). Also install [rocker](https://github.com/osrf/rocker) and [ign-rocker](https://github.com/adlarkin/ign-rocker) for the `ign-docker-env` command:
 ```
 pip3 install -r requirements.txt
 ```
