@@ -48,10 +48,13 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    # Use nightlies and prereleases for jetty
     - name: gz-utils4
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-cmake5
@@ -59,11 +62,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-plugin4
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-math9
@@ -71,11 +78,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-common7
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-msgs12
@@ -83,11 +94,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-transport15
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
           - name: ros2
@@ -97,11 +112,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-physics9
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-rendering10
@@ -109,11 +128,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-sensors10
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-gui10
@@ -121,11 +144,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-sim10
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-launch9
@@ -133,11 +160,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: sdformat16
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     # generic regexp
