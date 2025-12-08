@@ -21,18 +21,35 @@ Commands/Plugins:
 """
 
 from importlib import import_module
-from sys import stderr
+import logging
+import os
+import pkgutil
+import sys
 
 from docopt import docopt
 
-if __name__ == '__main__':
-    args = docopt(str(__doc__), version='gzdev-core 0.1.0', options_first=True)
-    cmd = args['<command>']
-    is_valid = {'ign-docker-env': True,
-                'repository': True}
 
-    if is_valid.get(cmd):
-        plugin = import_module('plugins.' + cmd)
+def get_plugins():
+    plugins = {}
+    plugins_path = os.path.join(os.path.dirname(__file__), "plugins")
+    for _, name, _ in pkgutil.iter_modules([plugins_path]):
+        plugins[name] = True
+    return plugins
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+    args = docopt(str(__doc__), version="gzdev-core 0.1.0", options_first=True)
+    cmd = args["<command>"]
+
+    plugins = get_plugins()
+
+    if cmd in plugins:
+        plugin = import_module(f"plugins.{cmd}")
         plugin.main()
     else:
-        print('\nERROR: `%s` is not a valid gzdev plugin.\n' % cmd, file=stderr)
+        logging.error(f"\nERROR: `{cmd}` is not a valid gzdev plugin.\n")
+
+
+if __name__ == "__main__":
+    main()

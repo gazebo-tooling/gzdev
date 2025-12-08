@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gzdev"
+version = "0.1.0"
+description = "Streamline many of the usual tasks that Gazebo developers face on a daily basis."
+authors = [
+  { name = "David Rosa" },
+  { name = "Open Source Robotics Foundation" }
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "distro",
+    "docopt==0.6.2",
+    "pyyaml",
+    "six==1.16.0",
+    "rocker @ git+https://github.com/osrf/rocker.git",
+    "ign-rocker @ git+https://github.com/adlarkin/ign-rocker.git",
+]
+
+[project.scripts]
+gzdev = "gzdev:main"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+dev = [
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "plugins",
+]
