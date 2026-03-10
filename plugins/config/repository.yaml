@@ -48,6 +48,99 @@ projects:
             type: stable
           - name: osrf
             type: nightly
+    # Use nightlies for rotary libraries as workaround for
+    # https://github.com/gazebo-tooling/gzdev/issues/102
+    # TODO: remove when support for 102 is ready
+    - name: gz-cmake6
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-common8
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-fuel-tools11
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-gui10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-math10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-msgs12
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-physics9
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-plugin5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-rendering10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-sensors10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-sim10
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-tools3
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-transport15
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: gz-utils5
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
+    - name: sdformat17
+      repositories:
+          - name: osrf
+            type: stable
+          - name: osrf
+            type: nightly
     # generic regexp
     - name: gazebo.*
       repositories:
