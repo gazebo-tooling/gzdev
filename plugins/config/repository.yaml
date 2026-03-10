@@ -69,7 +69,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-gui10
+    - name: gz-gui11
       repositories:
           - name: osrf
             type: stable
@@ -81,13 +81,13 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-msgs12
+    - name: gz-msgs13
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-physics9
+    - name: gz-physics10
       repositories:
           - name: osrf
             type: stable
@@ -99,19 +99,19 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-rendering10
+    - name: gz-rendering11
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-sensors10
+    - name: gz-sensors11
       repositories:
           - name: osrf
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-sim10
+    - name: gz-sim11
       repositories:
           - name: osrf
             type: stable
@@ -123,7 +123,7 @@ projects:
             type: stable
           - name: osrf
             type: nightly
-    - name: gz-transport15
+    - name: gz-transport16
       repositories:
           - name: osrf
             type: stable
