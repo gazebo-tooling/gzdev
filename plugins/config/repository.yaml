@@ -47,8 +47,10 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
-    # Use nightlies for rotary libraries as workaround for
+    # Use prerelease and nightlies for rotary libraries as workaround for
     # https://github.com/gazebo-tooling/gzdev/issues/102
     # TODO: remove when support for 102 is ready
     - name: gz-cmake6
@@ -56,11 +58,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-common8
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-fuel-tools12
@@ -68,11 +74,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-gui11
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-math10
@@ -80,11 +90,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-msgs13
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-physics10
@@ -92,11 +106,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-plugin5
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-rendering11
@@ -104,11 +122,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-sensors11
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-sim11
@@ -116,11 +138,15 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-tools3
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     - name: gz-transport16
@@ -128,17 +154,23 @@ projects:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: gz-utils5
       repositories:
           - name: osrf
             type: stable
           - name: osrf
+            type: prerelease
+          - name: osrf
             type: nightly
     - name: sdformat17
       repositories:
           - name: osrf
             type: stable
+          - name: osrf
+            type: prerelease
           - name: osrf
             type: nightly
     # generic regexp
