@@ -5,6 +5,7 @@ gzdev is a command line tool that facilitates the development of the open source
 
 **Prerequisites**
 * [Python](https://www.python.org/downloads/) - Version 3.5 or greater recommended
+* [nvidia-ctk](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) - Configure Rootless mode
 
 1. Clone the repository:
 ```
