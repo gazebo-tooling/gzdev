@@ -41,8 +41,10 @@ This module uses only the Python standard library so it can run on machines
 without gzdev's requirements installed.
 """
 
+import json
 import os
 import re
+import subprocess
 
 PLATFORMS = ('none', 'gh-actions', 'jenkins')
 BUILD_SYSTEMS = ('cmake', 'bazel')
@@ -53,6 +55,8 @@ DEFAULT_PATTERNS_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'config', 'filter-build-and-test.patterns')
 SECTION_RE = re.compile(r'\[([a-z:-]+)\]')
+GH_PR_EVENTS = ('pull_request', 'pull_request_target')
+SHA_RE = re.compile(r'[0-9a-f]{40}([0-9a-f]{24})?')
 
 
 class FilterBuildAndTestError(Exception):
@@ -112,3 +116,109 @@ def active_patterns(sections, build_platform, build_system):
 
 def is_ignorable(path, patterns):
     return any(pattern.search(path) for pattern in patterns)
+
+
+# --- change set ------------------------------------------------------------
+
+def git(repo_path, *args):
+    """Run git in repo_path and return its stdout."""
+    cmd = ['git', '-C', repo_path] + list(args)
+    try:
+        result = subprocess.run(cmd, capture_output=True)
+    except OSError as ex:
+        raise FilterBuildAndTestError('cannot run git: %s' % ex)
+    if result.returncode != 0:
+        raise FilterBuildAndTestError("'%s' failed: %s" % (
+            ' '.join(cmd), result.stderr.decode('utf-8', 'replace').strip()))
+    return result.stdout.decode('utf-8', 'surrogateescape')
+
+
+def split_nul(output):
+    return [path for path in output.split('\0') if path]
+
+
+def diff_paths(repo_path, *revisions):
+    """Paths changed between revisions; one revision means the working tree."""
+    return split_nul(git(repo_path, 'diff', '--name-only', '--no-renames',
+                         '-z', *revisions))
+
+
+def merge_base(repo_path, first, second):
+    return git(repo_path, 'merge-base', first, second).strip()
+
+
+def commit_exists(repo_path, sha):
+    result = subprocess.run(
+        ['git', '-C', repo_path, 'cat-file', '-e', sha + '^{commit}'],
+        capture_output=True)
+    return result.returncode == 0
+
+
+def check_sha(value, origin):
+    if not isinstance(value, str) or not SHA_RE.fullmatch(value):
+        raise FilterBuildAndTestError('%s is not a commit SHA: %r'
+                                      % (origin, value))
+    return value
+
+
+def working_tree_changes(repo_path, base):
+    """Changes since the merge-base, uncommitted and untracked included."""
+    paths = diff_paths(repo_path, merge_base(repo_path, base, 'HEAD'))
+    untracked = split_nul(git(repo_path, 'ls-files', '--others',
+                              '--exclude-standard', '-z'))
+    return paths + [path for path in untracked if path not in paths]
+
+
+def explicit_changes(platform, repo_path, base, head):
+    if head:
+        return diff_paths(repo_path, merge_base(repo_path, base, head), head)
+    if platform == 'none':
+        return working_tree_changes(repo_path, base)
+    return diff_paths(repo_path, merge_base(repo_path, base, 'HEAD'), 'HEAD')
+
+
+def jenkins_changes(repo_path, env):
+    """Changes of a ghprb pull request, or None outside a pull request."""
+    target = env.get('ghprbTargetBranch', '')
+    commit = env.get('ghprbActualCommit', '')
+    if not target or not commit:
+        return None
+    commit = check_sha(commit, 'ghprbActualCommit')
+    base = merge_base(repo_path, 'origin/' + target, commit)
+    return diff_paths(repo_path, base, commit)
+
+
+def read_event_base_sha(event_path):
+    if not event_path:
+        raise FilterBuildAndTestError('GITHUB_EVENT_PATH is not set')
+    try:
+        with open(event_path, encoding='utf-8') as event_file:
+            sha = json.load(event_file)['pull_request']['base']['sha']
+    except (OSError, ValueError, KeyError, TypeError) as ex:
+        raise FilterBuildAndTestError(
+            'cannot read pull_request.base.sha from %s: %r' % (event_path, ex))
+    return check_sha(sha, 'pull_request.base.sha')
+
+
+def gh_actions_changes(repo_path, env):
+    """Changes of a GitHub pull request, or None outside a pull request.
+
+    actions/checkout fetches only the test-merge commit (base + PR), so fetch
+    the base commit alone and compare the two trees; no history is needed.
+    """
+    if env.get('GITHUB_EVENT_NAME', '') not in GH_PR_EVENTS:
+        return None
+    base = read_event_base_sha(env.get('GITHUB_EVENT_PATH', ''))
+    if not commit_exists(repo_path, base):
+        git(repo_path, 'fetch', '--no-tags', '--depth=1', 'origin', base)
+    return diff_paths(repo_path, base, 'HEAD')
+
+
+def changed_files(args, env):
+    """Return the changed paths, or None when the run is not a pull request."""
+    if args.base:
+        return explicit_changes(args.build_platform, args.repo_path,
+                                args.base, args.head)
+    if args.build_platform == 'jenkins':
+        return jenkins_changes(args.repo_path, env)
+    return gh_actions_changes(args.repo_path, env)

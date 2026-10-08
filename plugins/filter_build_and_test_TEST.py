@@ -15,12 +15,73 @@
 #
 """Unittests for filter_build_and_test.py."""
 
+import json
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 
 import filter_build_and_test
+
+
+# Keep the tests away from the user's git configuration (signing, hooks...)
+GIT_ENV = {
+    'GIT_CONFIG_GLOBAL': os.devnull,
+    'GIT_CONFIG_NOSYSTEM': '1',
+    'GIT_AUTHOR_NAME': 'filter-build-and-test',
+    'GIT_AUTHOR_EMAIL': 'filter-build-and-test@example.com',
+    'GIT_COMMITTER_NAME': 'filter-build-and-test',
+    'GIT_COMMITTER_EMAIL': 'filter-build-and-test@example.com',
+}
+_saved_env = {}
+
+
+def setUpModule():
+    for key, value in GIT_ENV.items():
+        _saved_env[key] = os.environ.get(key)
+        os.environ[key] = value
+
+
+def tearDownModule():
+    for key, value in _saved_env.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+
+
+def run_git(cwd, *args):
+    result = subprocess.run(
+        ['git', '-c', 'init.defaultBranch=main', '-c', 'commit.gpgsign=false',
+         '-C', cwd] + list(args),
+        capture_output=True, check=True)
+    return result.stdout.decode('utf-8').strip()
+
+
+class GitRepo:
+    """A throwaway repository; commit() returns the new commit SHA."""
+
+    def __init__(self, path):
+        self.path = path
+        os.makedirs(path)
+        run_git(path, 'init', '-q')
+
+    def write(self, relative_path, content='content\n'):
+        full_path = os.path.join(self.path, relative_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, 'w', encoding='utf-8') as written_file:
+            written_file.write(content)
+
+    def commit(self, message, files):
+        for relative_path, content in files.items():
+            self.write(relative_path, content)
+        run_git(self.path, 'add', '-A')
+        run_git(self.path, 'commit', '-q', '-m', message)
+        return run_git(self.path, 'rev-parse', 'HEAD')
+
+    def git(self, *args):
+        return run_git(self.path, *args)
 
 
 class TempDirTest(unittest.TestCase):
@@ -146,6 +207,157 @@ class TestShippedPatterns(unittest.TestCase):
                 self.assertEqual(
                     filter_build_and_test.is_ignorable(path, patterns),
                     ignorable)
+
+
+class TestChangeDetection(TempDirTest):
+
+    def make_origin(self):
+        """main: A then B (src/b.cc); feature from A: C (README.md)."""
+        origin = GitRepo(self.tmp_path('origin'))
+        origin.git('config', 'uploadpack.allowAnySHA1InWant', 'true')
+        commits = {'A': origin.commit('A', {'README.md': 'a\n',
+                                            'src/a.cc': 'a\n'})}
+        origin.git('checkout', '-q', '-b', 'feature')
+        commits['C'] = origin.commit('C', {'README.md': 'c\n'})
+        origin.git('checkout', '-q', 'main')
+        commits['B'] = origin.commit('B', {'src/b.cc': 'b\n'})
+        return origin, commits
+
+    def make_pr_merge_clone(self):
+        """Shallow clone of a test-merge commit, as actions/checkout does."""
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', '-b', 'pr-merge', 'main')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge', 'feature')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', '--depth=1', '--branch', 'pr-merge',
+                'file://' + origin.path, clone)
+        return clone, commits
+
+    def event_file(self, base_sha):
+        return self.write_file('event.json', json.dumps(
+            {'pull_request': {'base': {'sha': base_sha}}}))
+
+    def test_jenkins_diffs_from_the_merge_base(self):
+        origin, commits = self.make_origin()
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': commits['C']}
+        self.assertEqual(filter_build_and_test.jenkins_changes(clone, env),
+                         ['README.md'])
+
+    def test_jenkins_ignores_target_changes_merged_into_the_pr(self):
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', 'feature')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+        head = origin.git('rev-parse', 'HEAD')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': head}
+        self.assertEqual(filter_build_and_test.jenkins_changes(clone, env),
+                         ['README.md'])
+
+    def test_jenkins_unknown_target_branch_is_an_error(self):
+        origin, commits = self.make_origin()
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'gz-sim99',
+               'ghprbActualCommit': commits['C']}
+        with self.assertRaisesRegex(
+                filter_build_and_test.FilterBuildAndTestError,
+                'merge-base origin/gz-sim99'):
+            filter_build_and_test.jenkins_changes(clone, env)
+
+    def test_jenkins_outside_a_pull_request(self):
+        self.assertIsNone(filter_build_and_test.jenkins_changes(self.tmp, {}))
+        self.assertIsNone(filter_build_and_test.jenkins_changes(
+            self.tmp, {'ghprbTargetBranch': 'main'}))
+
+    def test_jenkins_rejects_a_commit_that_is_not_a_sha(self):
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': '--all'}
+        with self.assertRaisesRegex(
+                filter_build_and_test.FilterBuildAndTestError,
+                'not a commit SHA'):
+            filter_build_and_test.jenkins_changes(self.tmp, env)
+
+    def test_gh_actions_fetches_the_base_into_a_shallow_clone(self):
+        clone, commits = self.make_pr_merge_clone()
+        self.assertFalse(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+        env = {'GITHUB_EVENT_NAME': 'pull_request',
+               'GITHUB_EVENT_PATH': self.event_file(commits['B'])}
+        self.assertEqual(filter_build_and_test.gh_actions_changes(clone, env),
+                         ['README.md'])
+        self.assertTrue(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+
+    def test_gh_actions_full_history_checkout(self):
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', '-b', 'pr-merge', 'main')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge', 'feature')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', '--branch', 'pr-merge',
+                origin.path, clone)
+        self.assertTrue(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+        env = {'GITHUB_EVENT_NAME': 'pull_request',
+               'GITHUB_EVENT_PATH': self.event_file(commits['B'])}
+        self.assertEqual(filter_build_and_test.gh_actions_changes(clone, env),
+                         ['README.md'])
+
+    def test_gh_actions_stale_base_only_adds_files(self):
+        clone, commits = self.make_pr_merge_clone()
+        env = {'GITHUB_EVENT_NAME': 'pull_request_target',
+               'GITHUB_EVENT_PATH': self.event_file(commits['A'])}
+        changes = filter_build_and_test.gh_actions_changes(clone, env)
+        assert changes is not None
+        self.assertEqual(sorted(changes), ['README.md', 'src/b.cc'])
+
+    def test_gh_actions_outside_a_pull_request(self):
+        self.assertIsNone(filter_build_and_test.gh_actions_changes(
+            self.tmp, {'GITHUB_EVENT_NAME': 'push'}))
+
+    def test_gh_actions_unreadable_event_is_an_error(self):
+        bad_event = self.write_file('bad.json', '{"pull_request": {}}')
+        for path in ('', self.tmp_path('missing.json'), bad_event):
+            with self.subTest(path=path):
+                env = {'GITHUB_EVENT_NAME': 'pull_request',
+                       'GITHUB_EVENT_PATH': path}
+                with self.assertRaises(
+                        filter_build_and_test.FilterBuildAndTestError):
+                    filter_build_and_test.gh_actions_changes(self.tmp, env)
+
+    def test_none_includes_uncommitted_and_untracked_files(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        repo.commit('A', {'README.md': 'a\n', 'src/a.cc': 'a\n'})
+        repo.write('src/a.cc', 'changed\n')
+        repo.write('CONTRIBUTING.md', 'staged\n')
+        repo.git('add', 'CONTRIBUTING.md')
+        repo.write('docs/new.md', 'untracked\n')
+        repo.write('build/ignored.o', 'ignored\n')
+        repo.write('.gitignore', 'build/\n')
+        self.assertEqual(
+            sorted(filter_build_and_test.working_tree_changes(repo.path,
+                                                              'main')),
+            ['.gitignore', 'CONTRIBUTING.md', 'docs/new.md', 'src/a.cc'])
+
+    def test_a_rename_lists_both_paths(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        base = repo.commit('A', {'src/old.cc': 'same content\n' * 20})
+        repo.git('mv', 'src/old.cc', 'Migration.md')
+        head = repo.commit('B', {})
+        self.assertEqual(
+            sorted(filter_build_and_test.explicit_changes('jenkins', repo.path,
+                                                          base, head)),
+            ['Migration.md', 'src/old.cc'])
+
+    def test_unusual_paths_are_returned_verbatim(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        base = repo.commit('A', {'README.md': 'a\n'})
+        head = repo.commit('B', {'docs/ñandú file.md': 'b\n'})
+        self.assertEqual(
+            filter_build_and_test.explicit_changes('none', repo.path, base,
+                                                   head),
+            ['docs/ñandú file.md'])
 
 
 if __name__ == '__main__':
