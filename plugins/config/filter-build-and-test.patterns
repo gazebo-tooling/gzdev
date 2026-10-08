@@ -1,0 +1,35 @@
+# Files that never need a build or tests, used by
+# `gzdev filter-build-and-test`.
+#
+# A line that is exactly [name] opens a section. Every other non-blank line
+# that does not start with '#' is a Python regular expression, matched with
+# re.search against the path relative to the repository root.
+#
+# The patterns used are [common] plus the sections selected by
+# --build-system and --build-platform.
+
+[common]
+^\.github/CODEOWNERS
+^Changelog\.md$
+^CONTRIBUTING\.md$
+^LICENSE$
+^Migration\.md$
+^README\.md$
+
+# Bazel files do not affect a CMake build
+[build-system:cmake]
+^\.bazelrc
+^\.bazelversion
+^\.bcr/
+BUILD\.bazel$
+MODULE\.bazel$
+
+[build-system:bazel]
+
+# Jenkins does not run the GitHub workflows
+[build-platform:jenkins]
+^\.github/workflows/
+
+[build-platform:gh-actions]
+
+[build-platform:none]
