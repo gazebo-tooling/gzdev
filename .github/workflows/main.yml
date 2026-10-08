@@ -30,7 +30,10 @@ jobs:
           flake8 . --count --ignore=D101,D102,D103,W503 --max-complexity=10 --max-line-length=127 --statistics
       - name: Test plugins _TEST.py
         run: |
-          python3 plugins/*_TEST.py
+          # unittest reads extra arguments as test names: one file per call
+          for test_file in plugins/*_TEST.py; do
+            python3 "${test_file}"
+          done
       - name: Smoke system tests for repository module
         run: |
           python3 gzdev.py repository list
@@ -63,3 +66,23 @@ jobs:
           python3 gzdev.py ign-docker-env citadel
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:bionic
           python3 gzdev.py ign-docker-env dome --linux-distro ubuntu:focal --vol /tmp:/foo::/tmp:/bar --rocker-args '--dev-helpers'
+
+  filter-build-and-test-stdlib:
+    # filter-build-and-test must work where gzdev's requirements are not installed
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.10']
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Test filter-build-and-test with the standard library only
+        run: |
+          python3 -S plugins/filter_build_and_test_TEST.py
+          python3 -S gzdev.py filter-build-and-test --build-platform=none --base=HEAD~1

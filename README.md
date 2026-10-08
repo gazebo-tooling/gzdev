@@ -37,8 +37,63 @@ Options:
 	--version      Show gzdev's version.
 
 Commands/Plugins:
-	ign-docker-env Launch docker environments ready for Ignition development
-        repository     Enable/Disable gazebo repositories.
+	filter-build-and-test  Decide whether a change needs to be built and tested
+	ign-docker-env         Launch docker environments ready for Ignition development
+        repository             Enable/Disable gazebo repositories.
+```
+
+## filter-build-and-test
+Decide whether a change needs to be built and tested. This first version
+answers one question: does the change touch any file that needs a build and
+tests? CI uses it to end pull request jobs early, before building, when every
+changed file matches the ignore patterns in
+[`plugins/config/filter-build-and-test.patterns`](plugins/config/filter-build-and-test.patterns).
+
+It needs only `git` and Python 3.8 or newer: gzdev's `requirements.txt` does not
+have to be installed.
+
+```
+gzdev filter-build-and-test [--build-platform=(none|gh-actions|jenkins)]
+                            [--build-system=(cmake|bazel)]
+                            [--return-if-none=N]
+                            [--base=REF] [--head=REF]
+                            [--repo-path=DIR]
+                            [--junit-output=FILE]
+```
+
+* `--build-platform` (default `none`): where the command runs. It selects how
+  the changed files are found and which patterns apply. `jenkins` reads the
+  `ghprb*` variables of a pull request build and `gh-actions` reads the pull
+  request event; outside a pull request both ask for a full build. `none` needs
+  `--base`.
+* `--build-system` (default `cmake`): selects the patterns of that build system.
+* `--return-if-none=N`: exit code (3 to 125) when no build or tests are needed.
+* `--base`, `--head`: compare `--head` (default `HEAD`) with its merge base
+  with `--base`, instead of reading the CI context. With
+  `--build-platform=none` and no `--head`, uncommitted and untracked files
+  count too.
+* `--repo-path` (default `.`): the repository to check.
+* `--junit-output`: when no build or tests are needed, write a JUnit report
+  there with one skipped test case.
+
+Exit codes: `0` the command ran and the change needs a build and tests, `N`
+the change needs neither, `1` the command could not decide, `2` invalid
+arguments. Logs go to stderr; stdout is kept for the results of later
+versions.
+
+In the pattern file, a `[section]` line starts a section. Every other line
+that is not empty and does not start with `#` is a Python regular expression,
+searched in each changed path relative to the repository root. `[common]`
+always applies, plus `[build-system:<system>]` and
+`[build-platform:<platform>]`.
+
+### Example
+
+Check the changes of the current branch, including uncommitted ones, against
+`main`:
+
+```
+python3 gzdev.py filter-build-and-test --base=main --return-if-none=99
 ```
 
 ## ign-docker-env
