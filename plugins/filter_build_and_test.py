@@ -41,10 +41,13 @@ This module uses only the Python standard library so it can run on machines
 without gzdev's requirements installed.
 """
 
+import argparse
 import json
 import os
 import re
 import subprocess
+import sys
+from xml.sax.saxutils import escape, quoteattr
 
 PLATFORMS = ('none', 'gh-actions', 'jenkins')
 BUILD_SYSTEMS = ('cmake', 'bazel')
@@ -57,6 +60,13 @@ DEFAULT_PATTERNS_FILE = os.path.join(
 SECTION_RE = re.compile(r'\[([a-z:-]+)\]')
 GH_PR_EVENTS = ('pull_request', 'pull_request_target')
 SHA_RE = re.compile(r'[0-9a-f]{40}([0-9a-f]{24})?')
+EXIT_OK = 0
+EXIT_FAILURE = 1
+MIN_RETURN_IF_NONE = 3
+MAX_RETURN_IF_NONE = 125
+MAX_LISTED_FILES = 20
+# Characters XML 1.0 does not allow, replaced before writing the JUnit file
+XML_INVALID_RE = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
 
 
 class FilterBuildAndTestError(Exception):
@@ -222,3 +232,154 @@ def changed_files(args, env):
     if args.build_platform == 'jenkins':
         return jenkins_changes(args.repo_path, env)
     return gh_actions_changes(args.repo_path, env)
+
+
+# --- reporting -------------------------------------------------------------
+
+def log(message):
+    print('filter-build-and-test: ' + message, file=sys.stderr)
+
+
+def no_build_message(changed):
+    return ('No build or tests needed: all %d changed files match the ignore'
+            ' patterns' % len(changed))
+
+
+def write_junit(path, changed):
+    """Write a JUnit report with one skipped test case explaining the skip."""
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    message = XML_INVALID_RE.sub('?', no_build_message(changed))
+    details = XML_INVALID_RE.sub('?', '\n'.join(changed))
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<testsuite name="filter-build-and-test" tests="1" failures="0"'
+        ' errors="0" skipped="1">\n'
+        '  <testcase classname="filter-build-and-test"'
+        ' name="no_build_needed">\n'
+        '    <skipped message=%s>%s</skipped>\n'
+        '  </testcase>\n'
+        '</testsuite>\n') % (quoteattr(message), escape(details))
+    with open(path, 'w', encoding='utf-8',
+              errors='backslashreplace') as junit_file:
+        junit_file.write(content)
+
+
+def report_gh_actions(changed, env):
+    """Annotate the run and add a section to the job summary."""
+    # Workflow commands must start at the beginning of the line
+    print('::notice title=CI skipped::' + no_build_message(changed),
+          file=sys.stderr)
+    summary_path = env.get('GITHUB_STEP_SUMMARY', '')
+    if not summary_path:
+        return
+    lines = ['### CI skipped', '', no_build_message(changed) + ':', '']
+    lines += ['- `%s`' % path for path in changed]
+    with open(summary_path, 'a', encoding='utf-8',
+              errors='backslashreplace') as summary_file:
+        summary_file.write('\n'.join(lines) + '\n')
+
+
+def log_paths(title, paths):
+    log(title)
+    for path in paths[:MAX_LISTED_FILES]:
+        log('  ' + path)
+    if len(paths) > MAX_LISTED_FILES:
+        log('  ... and %d more' % (len(paths) - MAX_LISTED_FILES))
+
+
+# --- decision --------------------------------------------------------------
+
+def decide(args, env, patterns_file):
+    """Return the exit code for a parsed command line."""
+    patterns = active_patterns(load_patterns(patterns_file),
+                               args.build_platform, args.build_system)
+    changed = changed_files(args, env)
+    if changed is None:
+        log('not a pull request: build and run all tests')
+        return EXIT_OK
+    if not changed:
+        log('found no changed files: build and run all tests')
+        return EXIT_OK
+    needs_build = [path for path in changed
+                   if not is_ignorable(path, patterns)]
+    if needs_build:
+        log_paths('%d of %d changed files need a build and tests:'
+                  % (len(needs_build), len(changed)), needs_build)
+        return EXIT_OK
+    log_paths(no_build_message(changed) + ':', changed)
+    if args.junit_output:
+        write_junit(args.junit_output, changed)
+    if args.build_platform == 'gh-actions':
+        report_gh_actions(changed, env)
+    if args.return_if_none is None:
+        return EXIT_OK
+    return args.return_if_none
+
+
+# --- command line ----------------------------------------------------------
+
+def return_code(text):
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError('%r is not an integer' % text)
+    if not MIN_RETURN_IF_NONE <= value <= MAX_RETURN_IF_NONE:
+        raise argparse.ArgumentTypeError(
+            'must be between %d and %d, got %d'
+            % (MIN_RETURN_IF_NONE, MAX_RETURN_IF_NONE, value))
+    return value
+
+
+def git_ref(text):
+    if not text or text.startswith('-'):
+        raise argparse.ArgumentTypeError('invalid git reference %r' % text)
+    return text
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog='gzdev filter-build-and-test', allow_abbrev=False,
+        description='Decide whether a change needs to be built and tested.')
+    parser.add_argument('--build-platform', choices=PLATFORMS,
+                        default='none')
+    parser.add_argument('--build-system', choices=BUILD_SYSTEMS,
+                        default='cmake')
+    parser.add_argument('--return-if-none', type=return_code, metavar='N',
+                        help='exit code when no build or tests are needed'
+                        ' (%d-%d)' % (MIN_RETURN_IF_NONE, MAX_RETURN_IF_NONE))
+    parser.add_argument('--base', type=git_ref, metavar='REF')
+    parser.add_argument('--head', type=git_ref, metavar='REF')
+    parser.add_argument('--repo-path', default='.', metavar='DIR')
+    parser.add_argument('--junit-output', metavar='FILE',
+                        help='JUnit report to write when no build or tests'
+                        ' are needed')
+    return parser
+
+
+def parse_args(argv):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.head and not args.base:
+        parser.error('--head requires --base')
+    if args.build_platform == 'none' and not args.base:
+        parser.error('--build-platform=none requires --base')
+    return args
+
+
+def main(argv=None, env=None, patterns_file=DEFAULT_PATTERNS_FILE):
+    args = parse_args(argv)
+    if env is None:
+        env = os.environ
+    log('build-platform=%s build-system=%s sections=[%s]' % (
+        args.build_platform, args.build_system,
+        ', '.join(active_sections(args.build_platform, args.build_system))))
+    try:
+        return decide(args, env, patterns_file)
+    except FilterBuildAndTestError as ex:
+        log('cannot decide: %s' % ex)
+        return EXIT_FAILURE
+
+
+if __name__ == '__main__':
+    sys.exit(main())
