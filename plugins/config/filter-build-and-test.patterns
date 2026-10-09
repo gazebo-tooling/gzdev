@@ -15,16 +15,23 @@
 ^LICENSE$
 ^Migration\.md$
 ^README\.md$
+^\.pre-commit-config\.ya?ml$
+^docker/
+(^|/)\.dockerignore$
+(^|/)\.gitignore$
 
 # Bazel files do not affect a CMake build
 [build-system:cmake]
 ^\.bazelrc
 ^\.bazelversion
 ^\.bcr/
+^bazel/
 BUILD\.bazel$
 MODULE\.bazel$
 
+# CMake files do not affect a Bazel build
 [build-system:bazel]
+CMakeLists\.txt$
 
 # Jenkins does not run the GitHub workflows
 [build-platform:jenkins]
@@ -32,4 +39,7 @@ MODULE\.bazel$
 
 [build-platform:gh-actions]
 
+# Local builds do not use anything in .github nor report coverage
 [build-platform:none]
+^\.github/
+^\.?codecov\.ya?ml$
