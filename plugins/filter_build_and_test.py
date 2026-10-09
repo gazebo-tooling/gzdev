@@ -65,8 +65,8 @@ EXIT_FAILURE = 1
 MIN_RETURN_IF_NONE = 3
 MAX_RETURN_IF_NONE = 125
 MAX_LISTED_FILES = 20
-# Characters XML 1.0 does not allow, replaced before writing the JUnit file
-XML_INVALID_RE = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
+# Control characters, escaped wherever a file name is reported
+CONTROL_RE = re.compile('[\x00-\x1f\x7f-\x9f]')
 
 
 class FilterBuildAndTestError(Exception):
@@ -236,8 +236,15 @@ def changed_files(args, env):
 
 # --- reporting -------------------------------------------------------------
 
+def printable(text):
+    """Escape control characters, so the text stays on one line."""
+    return CONTROL_RE.sub(lambda match: '\\x%02x' % ord(match.group()), text)
+
+
 def log(message):
-    print('filter-build-and-test: ' + message, file=sys.stderr)
+    # A file name with a newline must not start a line of its own, such as a
+    # GitHub workflow command
+    print('filter-build-and-test: ' + printable(message), file=sys.stderr)
 
 
 def no_build_message(changed):
@@ -249,8 +256,8 @@ def write_junit(path, changed):
     """Write a JUnit report with one skipped test case explaining the skip."""
     directory = os.path.dirname(os.path.abspath(path))
     os.makedirs(directory, exist_ok=True)
-    message = XML_INVALID_RE.sub('?', no_build_message(changed))
-    details = XML_INVALID_RE.sub('?', '\n'.join(changed))
+    message = no_build_message(changed)
+    details = '\n'.join(printable(path) for path in changed)
     content = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<testsuite name="filter-build-and-test" tests="1" failures="0"'
@@ -274,7 +281,7 @@ def report_gh_actions(changed, env):
     if not summary_path:
         return
     lines = ['### CI skipped', '', no_build_message(changed) + ':', '']
-    lines += ['- `%s`' % path for path in changed]
+    lines += ['- `%s`' % printable(path) for path in changed]
     with open(summary_path, 'a', encoding='utf-8',
               errors='backslashreplace') as summary_file:
         summary_file.write('\n'.join(lines) + '\n')

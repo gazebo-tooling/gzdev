@@ -521,6 +521,43 @@ class TestDecision(TempDirTest):
         self.assertIn('### CI skipped', content)
         self.assertIn('- `README.md`', content)
 
+    def test_a_file_name_cannot_start_a_log_line(self):
+        self.repo.git('checkout', '-q', '-b', 'newline', self.base)
+        head = self.repo.commit('newline', {
+            'src/a.cc\n::warning::injected': 'x\n'})
+        code, _, err = run_main(self.args(head, '--build-platform',
+                                          'gh-actions'))
+        self.assertEqual(code, 0)
+        self.assertIn(
+            'filter-build-and-test:   src/a.cc\\x0a::warning::injected\n', err)
+        self.assertEqual(
+            [line for line in err.splitlines()
+             if not line.startswith('filter-build-and-test: ')], [])
+
+    def test_ignored_file_names_are_escaped_in_every_report(self):
+        name = 'x\n::warning::injected\rBUILD.bazel'
+        escaped = 'x\\x0a::warning::injected\\x0dBUILD.bazel'
+        self.repo.git('checkout', '-q', '-b', 'newline', self.base)
+        head = self.repo.commit('newline', {name: 'x\n'})
+        summary = self.write_file('summary.md', '')
+        junit = self.tmp_path('filter_build_and_test.xml')
+        code, _, err = run_main(
+            self.args(head, '--build-platform', 'gh-actions',
+                      '--return-if-none', '99', '--junit-output', junit),
+            {'GITHUB_STEP_SUMMARY': summary})
+        self.assertEqual(code, 99)
+        self.assertEqual([line for line in err.splitlines()
+                          if not line.startswith('filter-build-and-test: ')],
+                         ['::notice title=CI skipped::No build or tests'
+                          ' needed: all 1 changed files match the ignore'
+                          ' patterns'])
+        self.assertIn('filter-build-and-test:   ' + escaped + '\n', err)
+        with open(summary, encoding='utf-8') as summary_file:
+            self.assertIn('- `%s`\n' % escaped, summary_file.read())
+        skipped = ElementTree.parse(junit).getroot().find('testcase/skipped')
+        assert skipped is not None
+        self.assertEqual(skipped.text, escaped)
+
 
 class TestArguments(unittest.TestCase):
 
