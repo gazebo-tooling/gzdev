@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ElementTree
 
 import filter_build_and_test
 
@@ -90,13 +91,14 @@ class GitRepo:
         return run_git(self.path, *args)
 
 
-def run_main(argv,
+def run_main(argv, env=None,
              patterns_file=filter_build_and_test.DEFAULT_PATTERNS_FILE):
     """Return (exit code, stdout, stderr) of filter_build_and_test.main()."""
     out, err = io.StringIO(), io.StringIO()
     with redirect_stdout(out), redirect_stderr(err):
         try:
-            code = filter_build_and_test.main(argv, patterns_file)
+            code = filter_build_and_test.main(
+                argv, env if env is not None else {}, patterns_file)
         except SystemExit as ex:
             code = ex.code
     return code, out.getvalue(), err.getvalue()
@@ -215,6 +217,12 @@ class TestShippedPatterns(unittest.TestCase):
         ('CMakeLists.txt', 'none', 'bazel', True),
         ('sdf/1.12/CMakeLists.txt', 'none', 'bazel', True),
         ('cmake/FindFoo.cmake', 'none', 'bazel', False),
+        # [build-platform:jenkins]
+        ('CONTRIBUTING.md', 'jenkins', 'cmake', True),
+        ('BUILD.bazel', 'jenkins', 'cmake', True),
+        ('.github/workflows/ci.yml', 'jenkins', 'cmake', True),
+        ('.github/ci/packages.apt', 'jenkins', 'cmake', False),
+        ('codecov.yml', 'jenkins', 'cmake', False),
         # [build-platform:none]
         ('.github/workflows/ci.yml', 'none', 'cmake', True),
         ('.github/ci/packages.apt', 'none', 'cmake', True),
@@ -246,6 +254,60 @@ class TestShippedPatterns(unittest.TestCase):
 
 class TestChangeDetection(TempDirTest):
 
+    def make_origin(self):
+        """main: A then B (src/b.cc); feature from A: C (README.md)."""
+        origin = GitRepo(self.tmp_path('origin'))
+        origin.git('config', 'uploadpack.allowAnySHA1InWant', 'true')
+        commits = {'A': origin.commit('A', {'README.md': 'a\n',
+                                            'src/a.cc': 'a\n'})}
+        origin.git('checkout', '-q', '-b', 'feature')
+        commits['C'] = origin.commit('C', {'README.md': 'c\n'})
+        origin.git('checkout', '-q', 'main')
+        commits['B'] = origin.commit('B', {'src/b.cc': 'b\n'})
+        return origin, commits
+
+    def test_jenkins_diffs_from_the_merge_base(self):
+        origin, commits = self.make_origin()
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': commits['C']}
+        self.assertEqual(filter_build_and_test.jenkins_changes(clone, env),
+                         ['README.md'])
+
+    def test_jenkins_ignores_target_changes_merged_into_the_pr(self):
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', 'feature')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+        head = origin.git('rev-parse', 'HEAD')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': head}
+        self.assertEqual(filter_build_and_test.jenkins_changes(clone, env),
+                         ['README.md'])
+
+    def test_jenkins_unknown_target_branch_is_an_error(self):
+        origin, commits = self.make_origin()
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', origin.path, clone)
+        env = {'ghprbTargetBranch': 'gz-sim99',
+               'ghprbActualCommit': commits['C']}
+        with self.assertRaisesRegex(
+                filter_build_and_test.FilterBuildAndTestError,
+                'merge-base origin/gz-sim99'):
+            filter_build_and_test.jenkins_changes(clone, env)
+
+    def test_jenkins_outside_a_pull_request(self):
+        self.assertIsNone(filter_build_and_test.jenkins_changes(self.tmp, {}))
+        self.assertIsNone(filter_build_and_test.jenkins_changes(
+            self.tmp, {'ghprbTargetBranch': 'main'}))
+
+    def test_jenkins_rejects_a_commit_that_is_not_a_sha(self):
+        env = {'ghprbTargetBranch': 'main', 'ghprbActualCommit': '--all'}
+        with self.assertRaisesRegex(
+                filter_build_and_test.FilterBuildAndTestError,
+                'not a commit SHA'):
+            filter_build_and_test.jenkins_changes(self.tmp, env)
+
     def test_none_includes_uncommitted_and_untracked_files(self):
         repo = GitRepo(self.tmp_path('repo'))
         repo.commit('A', {'README.md': 'a\n', 'src/a.cc': 'a\n'})
@@ -266,8 +328,8 @@ class TestChangeDetection(TempDirTest):
         repo.git('mv', 'src/old.cc', 'Migration.md')
         head = repo.commit('B', {})
         self.assertEqual(
-            sorted(filter_build_and_test.explicit_changes(repo.path, base,
-                                                          head)),
+            sorted(filter_build_and_test.explicit_changes('jenkins', repo.path,
+                                                          base, head)),
             ['Migration.md', 'src/old.cc'])
 
     def test_unusual_paths_are_returned_verbatim(self):
@@ -275,7 +337,8 @@ class TestChangeDetection(TempDirTest):
         base = repo.commit('A', {'README.md': 'a\n'})
         head = repo.commit('B', {'docs/ñandú file.md': 'b\n'})
         self.assertEqual(
-            filter_build_and_test.explicit_changes(repo.path, base, head),
+            filter_build_and_test.explicit_changes('none', repo.path, base,
+                                                   head),
             ['docs/ñandú file.md'])
 
 
@@ -339,6 +402,18 @@ class TestDecision(TempDirTest):
         self.assertEqual(code, 0)
         self.assertIn('found no changed files', err)
 
+    def test_outside_a_pull_request_runs_the_tests(self):
+        code, _, err = run_main(['--build-platform', 'jenkins',
+                                 '--repo-path', self.repo.path,
+                                 '--return-if-none', '99'])
+        self.assertEqual(code, 0)
+        self.assertIn('not a pull request', err)
+
+    def test_explicit_base_overrides_ci_detection(self):
+        code, _, _ = run_main(self.args(self.docs, '--build-platform',
+                                        'jenkins', '--return-if-none', '99'))
+        self.assertEqual(code, 99)
+
     def test_git_failure_returns_1(self):
         not_a_repo = self.tmp_path('empty')
         os.makedirs(not_a_repo)
@@ -370,6 +445,29 @@ class TestDecision(TempDirTest):
         self.assertIn('25 of 25 changed files need a build and tests:', err)
         self.assertIn('... and 5 more', err)
 
+    def test_junit_report_when_no_build_is_needed(self):
+        junit = self.tmp_path('build', 'test_results',
+                              'filter_build_and_test.xml')
+        run_main(self.args(self.docs, '--junit-output', junit))
+        suite = ElementTree.parse(junit).getroot()
+        self.assertEqual(suite.tag, 'testsuite')
+        self.assertEqual(suite.get('skipped'), '1')
+        cases = suite.findall('testcase')
+        self.assertEqual([case.get('name') for case in cases],
+                         ['no_build_needed'])
+        skipped = cases[0].find('skipped')
+        self.assertIsNotNone(skipped)
+        assert skipped is not None
+        self.assertTrue(skipped.get('message', '').startswith(
+            'No build or tests needed'))
+        self.assertEqual(skipped.text, 'README.md')
+
+    def test_no_junit_report_when_a_build_is_needed(self):
+        junit = self.tmp_path('build', 'test_results',
+                              'filter_build_and_test.xml')
+        run_main(self.args(self.code, '--junit-output', junit))
+        self.assertFalse(os.path.exists(junit))
+
     def test_a_file_name_cannot_start_a_log_line(self):
         self.repo.git('checkout', '-q', '-b', 'newline', self.base)
         head = self.repo.commit('newline', {
@@ -391,6 +489,7 @@ class TestArguments(unittest.TestCase):
         self.assertEqual(args.build_system, 'cmake')
         self.assertEqual(args.repo_path, '.')
         self.assertIsNone(args.return_if_none)
+        self.assertIsNone(args.junit_output)
 
     def test_return_if_none_range(self):
         for value in ('3', '125'):

@@ -33,6 +33,10 @@ MODULE\.bazel$
 [build-system:bazel]
 CMakeLists\.txt$
 
+# Jenkins does not run the GitHub workflows
+[build-platform:jenkins]
+^\.github/workflows/
+
 # Local builds do not use anything in .github nor report coverage
 [build-platform:none]
 ^\.github/

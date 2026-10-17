@@ -53,20 +53,27 @@ It needs only `git` and Python 3.8 or newer: gzdev's `requirements.txt` does not
 have to be installed.
 
 ```
-gzdev filter-build-and-test [--build-platform=none]
+gzdev filter-build-and-test [--build-platform=(none|jenkins)]
                             [--build-system=(cmake|bazel)]
                             [--return-if-none=N]
                             [--base=REF] [--head=REF]
                             [--repo-path=DIR]
+                            [--junit-output=FILE]
 ```
 
-* `--build-platform` (default `none`): where the command runs. It selects
-  which patterns apply. `none` needs `--base`.
+* `--build-platform` (default `none`): where the command runs. It selects how
+  the changed files are found and which patterns apply. `jenkins` reads the
+  `ghprb*` variables of a pull request build; outside a pull request it asks
+  for a full build. `none` needs `--base`.
 * `--build-system` (default `cmake`): selects the patterns of that build system.
 * `--return-if-none=N`: exit code (3 to 125) when no build or tests are needed.
 * `--base`, `--head`: compare `--head` (default `HEAD`) with its merge base
-  with `--base`. Without `--head`, uncommitted and untracked files count too.
+  with `--base`, instead of reading the CI context. With
+  `--build-platform=none` and no `--head`, uncommitted and untracked files
+  count too.
 * `--repo-path` (default `.`): the repository to check.
+* `--junit-output`: when no build or tests are needed, write a JUnit report
+  there with one skipped test case.
 
 Exit codes: `0` the command ran and the change needs a build and tests, `N`
 the change needs neither, `1` the command could not decide, `2` invalid
