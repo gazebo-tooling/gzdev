@@ -40,9 +40,11 @@ This module uses only the Python standard library so it can run on machines
 without gzdev's requirements installed.
 """
 
+import argparse
 import os
 import re
 import subprocess
+import sys
 
 PLATFORMS = ('none',)
 BUILD_SYSTEMS = ('cmake', 'bazel')
@@ -53,6 +55,13 @@ DEFAULT_PATTERNS_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'config', 'filter-build-and-test.patterns')
 SECTION_RE = re.compile(r'\[([a-z:-]+)\]')
+EXIT_OK = 0
+EXIT_FAILURE = 1
+MIN_RETURN_IF_NONE = 3
+MAX_RETURN_IF_NONE = 125
+MAX_LISTED_FILES = 20
+# Control characters, escaped wherever a file name is reported
+CONTROL_RE = re.compile('[\x00-\x1f\x7f-\x9f]')
 
 
 class FilterBuildAndTestError(Exception):
@@ -160,3 +169,114 @@ def explicit_changes(repo_path, base, head):
 def changed_files(args):
     """Return the changed paths."""
     return explicit_changes(args.repo_path, args.base, args.head)
+
+
+# --- reporting -------------------------------------------------------------
+
+def printable(text):
+    """Escape control characters, so the text stays on one line."""
+    return CONTROL_RE.sub(lambda match: '\\x%02x' % ord(match.group()), text)
+
+
+def log(message):
+    # A file name with a newline must not start a line of its own, such as a
+    # GitHub workflow command
+    print('filter-build-and-test: ' + printable(message), file=sys.stderr)
+
+
+def no_build_message(changed):
+    return ('No build or tests needed: all %d changed files match the ignore'
+            ' patterns' % len(changed))
+
+
+def log_paths(title, paths):
+    log(title)
+    for path in paths[:MAX_LISTED_FILES]:
+        log('  ' + path)
+    if len(paths) > MAX_LISTED_FILES:
+        log('  ... and %d more' % (len(paths) - MAX_LISTED_FILES))
+
+
+# --- decision --------------------------------------------------------------
+
+def decide(args, patterns_file):
+    """Return the exit code for a parsed command line."""
+    patterns = active_patterns(load_patterns(patterns_file),
+                               args.build_platform, args.build_system)
+    changed = changed_files(args)
+    if not changed:
+        log('found no changed files: build and run all tests')
+        return EXIT_OK
+    needs_build = [path for path in changed
+                   if not is_ignorable(path, patterns)]
+    if needs_build:
+        log_paths('%d of %d changed files need a build and tests:'
+                  % (len(needs_build), len(changed)), needs_build)
+        return EXIT_OK
+    log_paths(no_build_message(changed) + ':', changed)
+    if args.return_if_none is None:
+        return EXIT_OK
+    return args.return_if_none
+
+
+# --- command line ----------------------------------------------------------
+
+def return_code(text):
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError('%r is not an integer' % text)
+    if not MIN_RETURN_IF_NONE <= value <= MAX_RETURN_IF_NONE:
+        raise argparse.ArgumentTypeError(
+            'must be between %d and %d, got %d'
+            % (MIN_RETURN_IF_NONE, MAX_RETURN_IF_NONE, value))
+    return value
+
+
+def git_ref(text):
+    if not text or text.startswith('-'):
+        raise argparse.ArgumentTypeError('invalid git reference %r' % text)
+    return text
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog='gzdev filter-build-and-test', allow_abbrev=False,
+        description='Decide whether a change needs to be built and tested.')
+    parser.add_argument('--build-platform', choices=PLATFORMS,
+                        default='none')
+    parser.add_argument('--build-system', choices=BUILD_SYSTEMS,
+                        default='cmake')
+    parser.add_argument('--return-if-none', type=return_code, metavar='N',
+                        help='exit code when no build or tests are needed'
+                        ' (%d-%d)' % (MIN_RETURN_IF_NONE, MAX_RETURN_IF_NONE))
+    parser.add_argument('--base', type=git_ref, metavar='REF')
+    parser.add_argument('--head', type=git_ref, metavar='REF')
+    parser.add_argument('--repo-path', default='.', metavar='DIR')
+    return parser
+
+
+def parse_args(argv):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.head and not args.base:
+        parser.error('--head requires --base')
+    if args.build_platform == 'none' and not args.base:
+        parser.error('--build-platform=none requires --base')
+    return args
+
+
+def main(argv=None, patterns_file=DEFAULT_PATTERNS_FILE):
+    args = parse_args(argv)
+    log('build-platform=%s build-system=%s sections=[%s]' % (
+        args.build_platform, args.build_system,
+        ', '.join(active_sections(args.build_platform, args.build_system))))
+    try:
+        return decide(args, patterns_file)
+    except FilterBuildAndTestError as ex:
+        log('cannot decide: %s' % ex)
+        return EXIT_FAILURE
+
+
+if __name__ == '__main__':
+    sys.exit(main())
