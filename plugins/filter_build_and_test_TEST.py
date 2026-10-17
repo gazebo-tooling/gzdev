@@ -15,6 +15,8 @@
 #
 """Unittests for filter_build_and_test.py."""
 
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import os
 import shutil
 import subprocess
@@ -81,6 +83,18 @@ class GitRepo:
 
     def git(self, *args):
         return run_git(self.path, *args)
+
+
+def run_main(argv,
+             patterns_file=filter_build_and_test.DEFAULT_PATTERNS_FILE):
+    """Return (exit code, stdout, stderr) of filter_build_and_test.main()."""
+    out, err = io.StringIO(), io.StringIO()
+    with redirect_stdout(out), redirect_stderr(err):
+        try:
+            code = filter_build_and_test.main(argv, patterns_file)
+        except SystemExit as ex:
+            code = ex.code
+    return code, out.getvalue(), err.getvalue()
 
 
 class TempDirTest(unittest.TestCase):
@@ -258,6 +272,142 @@ class TestChangeDetection(TempDirTest):
         self.assertEqual(
             filter_build_and_test.explicit_changes(repo.path, base, head),
             ['docs/ñandú file.md'])
+
+
+class TestDecision(TempDirTest):
+
+    def setUp(self):
+        super().setUp()
+        self.repo = GitRepo(self.tmp_path('repo'))
+        self.base = self.repo.commit('A', {'README.md': 'a\n',
+                                           'src/a.cc': 'a\n',
+                                           'BUILD.bazel': 'a\n'})
+        self.docs = self.repo.commit('docs', {'README.md': 'docs\n'})
+        self.repo.git('checkout', '-q', '-b', 'code', self.base)
+        self.code = self.repo.commit('code', {'src/a.cc': 'code\n'})
+        self.repo.git('checkout', '-q', '-b', 'bazel', self.base)
+        self.bazel = self.repo.commit('bazel', {'BUILD.bazel': 'bazel\n'})
+
+    def args(self, head, *extra):
+        return ['--repo-path', self.repo.path, '--base', self.base,
+                '--head', head] + list(extra)
+
+    def test_no_build_needed_returns_the_requested_code(self):
+        code, out, err = run_main(self.args(self.docs, '--return-if-none',
+                                            '99'))
+        self.assertEqual(code, 99)
+        self.assertEqual(out, '')
+        self.assertIn('No build or tests needed: all 1 changed files match',
+                      err)
+
+    def test_no_build_needed_without_return_if_none_returns_0(self):
+        code, out, err = run_main(self.args(self.docs))
+        self.assertEqual(code, 0)
+        self.assertIn('No build or tests needed', err)
+
+    def test_build_needed_returns_0_and_lists_the_files(self):
+        code, out, err = run_main(self.args(self.code, '--return-if-none',
+                                            '99'))
+        self.assertEqual(code, 0)
+        self.assertEqual(out, '')
+        self.assertIn('1 of 1 changed files need a build and tests:', err)
+        self.assertIn('filter-build-and-test:   src/a.cc', err)
+
+    def test_deleting_a_source_file_needs_a_build(self):
+        self.repo.git('checkout', '-q', '-b', 'delete', self.base)
+        self.repo.git('rm', '-q', 'src/a.cc')
+        delete = self.repo.commit('delete', {})
+        code, _, err = run_main(self.args(delete, '--return-if-none', '99'))
+        self.assertEqual(code, 0)
+        self.assertIn('filter-build-and-test:   src/a.cc', err)
+
+    def test_build_system_selects_the_bazel_patterns(self):
+        cmake = run_main(self.args(self.bazel, '--return-if-none', '99'))
+        bazel = run_main(self.args(self.bazel, '--return-if-none', '99',
+                                   '--build-system', 'bazel'))
+        self.assertEqual(cmake[0], 99)
+        self.assertEqual(bazel[0], 0)
+
+    def test_empty_change_set_runs_the_tests(self):
+        code, _, err = run_main(self.args(self.base, '--return-if-none',
+                                          '99'))
+        self.assertEqual(code, 0)
+        self.assertIn('found no changed files', err)
+
+    def test_git_failure_returns_1(self):
+        not_a_repo = self.tmp_path('empty')
+        os.makedirs(not_a_repo)
+        code, out, err = run_main(['--repo-path', not_a_repo, '--base',
+                                   'main', '--return-if-none', '99'])
+        self.assertEqual(code, 1)
+        self.assertEqual(out, '')
+        self.assertIn('cannot decide', err)
+
+    def test_bad_pattern_file_returns_1(self):
+        bad = self.write_file('bad.patterns', '[nonsense]\n')
+        code, _, err = run_main(self.args(self.docs, '--return-if-none',
+                                          '99'), patterns_file=bad)
+        self.assertEqual(code, 1)
+        self.assertIn('unknown section', err)
+
+    def test_settings_are_logged_first(self):
+        _, _, err = run_main(self.args(self.docs))
+        self.assertEqual(
+            err.splitlines()[0],
+            'filter-build-and-test: build-platform=none build-system=cmake '
+            'sections=[common, build-system:cmake, build-platform:none]')
+
+    def test_long_file_lists_are_truncated(self):
+        self.repo.git('checkout', '-q', '-b', 'many', self.base)
+        many = self.repo.commit('many', {'src/f%02d.cc' % i: 'x\n'
+                                         for i in range(25)})
+        _, _, err = run_main(self.args(many))
+        self.assertIn('25 of 25 changed files need a build and tests:', err)
+        self.assertIn('... and 5 more', err)
+
+    def test_a_file_name_cannot_start_a_log_line(self):
+        self.repo.git('checkout', '-q', '-b', 'newline', self.base)
+        head = self.repo.commit('newline', {
+            'src/a.cc\n::warning::injected': 'x\n'})
+        code, _, err = run_main(self.args(head))
+        self.assertEqual(code, 0)
+        self.assertIn(
+            'filter-build-and-test:   src/a.cc\\x0a::warning::injected\n', err)
+        self.assertEqual(
+            [line for line in err.splitlines()
+             if not line.startswith('filter-build-and-test: ')], [])
+
+
+class TestArguments(unittest.TestCase):
+
+    def test_defaults(self):
+        args = filter_build_and_test.parse_args(['--base', 'main'])
+        self.assertEqual(args.build_platform, 'none')
+        self.assertEqual(args.build_system, 'cmake')
+        self.assertEqual(args.repo_path, '.')
+        self.assertIsNone(args.return_if_none)
+
+    def test_return_if_none_range(self):
+        for value in ('3', '125'):
+            args = filter_build_and_test.parse_args(
+                ['--base', 'main', '--return-if-none', value])
+            self.assertEqual(args.return_if_none, int(value))
+        for value in ('0', '1', '2', '126', '999', '-1', 'abc'):
+            with self.subTest(value=value):
+                code, _, _ = run_main(['--base', 'main',
+                                       '--return-if-none=' + value])
+                self.assertEqual(code, 2)
+
+    def test_usage_errors(self):
+        for argv in (['--build-platform', 'none'],
+                     ['--head', 'HEAD'],
+                     ['--base', '--all'],
+                     ['--build-platform', 'travis', '--base', 'main'],
+                     ['--build-system', 'make', '--base', 'main']):
+            with self.subTest(argv=argv):
+                code, out, _ = run_main(argv)
+                self.assertEqual(code, 2)
+                self.assertEqual(out, '')
 
 
 if __name__ == '__main__':
