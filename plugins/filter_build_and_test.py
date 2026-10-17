@@ -17,7 +17,7 @@ Decide whether a change needs to be built and tested.
 
 Usage:
         gzdev filter-build-and-test
-                [--build-platform=(none|jenkins)]
+                [--build-platform=(none|gh-actions|jenkins)]
                 [--build-system=(cmake|bazel)]
                 [--return-if-none=N]
                 [--base=REF] [--head=REF]
@@ -31,7 +31,7 @@ patterns in plugins/config/filter-build-and-test.patterns.
 Exit codes:
         0       the tool ran fine, the change needs a build and tests
         N       the tool ran fine, the change needs neither (--return-if-none)
-        1       the tool could not decide (git, pattern file)
+        1       the tool could not decide (git, event file, pattern file)
         2       bad arguments
 
 Logs go to stderr. stdout is kept for the machine-readable result of later
@@ -42,13 +42,14 @@ without gzdev's requirements installed.
 """
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
 from xml.sax.saxutils import escape, quoteattr
 
-PLATFORMS = ('none', 'jenkins')
+PLATFORMS = ('none', 'gh-actions', 'jenkins')
 BUILD_SYSTEMS = ('cmake', 'bazel')
 KNOWN_SECTIONS = (('common',)
                   + tuple('build-system:' + s for s in BUILD_SYSTEMS)
@@ -57,6 +58,7 @@ DEFAULT_PATTERNS_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'config', 'filter-build-and-test.patterns')
 SECTION_RE = re.compile(r'\[([a-z:-]+)\]')
+GH_PR_EVENTS = ('pull_request', 'pull_request_target')
 SHA_RE = re.compile(r'[0-9a-f]{40}([0-9a-f]{24})?')
 EXIT_OK = 0
 EXIT_FAILURE = 1
@@ -155,6 +157,13 @@ def merge_base(repo_path, first, second):
     return git(repo_path, 'merge-base', first, second).strip()
 
 
+def commit_exists(repo_path, sha):
+    result = subprocess.run(
+        ['git', '-C', repo_path, 'cat-file', '-e', sha + '^{commit}'],
+        capture_output=True)
+    return result.returncode == 0
+
+
 def check_sha(value, origin):
     if not isinstance(value, str) or not SHA_RE.fullmatch(value):
         raise FilterBuildAndTestError('%s is not a commit SHA: %r'
@@ -189,12 +198,40 @@ def jenkins_changes(repo_path, env):
     return diff_paths(repo_path, base, commit)
 
 
+def read_event_base_sha(event_path):
+    if not event_path:
+        raise FilterBuildAndTestError('GITHUB_EVENT_PATH is not set')
+    try:
+        with open(event_path, encoding='utf-8') as event_file:
+            sha = json.load(event_file)['pull_request']['base']['sha']
+    except (OSError, ValueError, KeyError, TypeError) as ex:
+        raise FilterBuildAndTestError(
+            'cannot read pull_request.base.sha from %s: %r' % (event_path, ex))
+    return check_sha(sha, 'pull_request.base.sha')
+
+
+def gh_actions_changes(repo_path, env):
+    """Changes of a GitHub pull request, or None outside a pull request.
+
+    actions/checkout fetches only the test-merge commit (base + PR), so fetch
+    the base commit alone and compare the two trees; no history is needed.
+    """
+    if env.get('GITHUB_EVENT_NAME', '') not in GH_PR_EVENTS:
+        return None
+    base = read_event_base_sha(env.get('GITHUB_EVENT_PATH', ''))
+    if not commit_exists(repo_path, base):
+        git(repo_path, 'fetch', '--no-tags', '--depth=1', 'origin', base)
+    return diff_paths(repo_path, base, 'HEAD')
+
+
 def changed_files(args, env):
     """Return the changed paths, or None when the run is not a pull request."""
     if args.base:
         return explicit_changes(args.build_platform, args.repo_path,
                                 args.base, args.head)
-    return jenkins_changes(args.repo_path, env)
+    if args.build_platform == 'jenkins':
+        return jenkins_changes(args.repo_path, env)
+    return gh_actions_changes(args.repo_path, env)
 
 
 # --- reporting -------------------------------------------------------------
@@ -235,6 +272,21 @@ def write_junit(path, changed):
         junit_file.write(content)
 
 
+def report_gh_actions(changed, env):
+    """Annotate the run and add a section to the job summary."""
+    # Workflow commands must start at the beginning of the line
+    print('::notice title=CI skipped::' + no_build_message(changed),
+          file=sys.stderr)
+    summary_path = env.get('GITHUB_STEP_SUMMARY', '')
+    if not summary_path:
+        return
+    lines = ['### CI skipped', '', no_build_message(changed) + ':', '']
+    lines += ['- `%s`' % printable(path) for path in changed]
+    with open(summary_path, 'a', encoding='utf-8',
+              errors='backslashreplace') as summary_file:
+        summary_file.write('\n'.join(lines) + '\n')
+
+
 def log_paths(title, paths):
     log(title)
     for path in paths[:MAX_LISTED_FILES]:
@@ -265,6 +317,8 @@ def decide(args, env, patterns_file):
     log_paths(no_build_message(changed) + ':', changed)
     if args.junit_output:
         write_junit(args.junit_output, changed)
+    if args.build_platform == 'gh-actions':
+        report_gh_actions(changed, env)
     if args.return_if_none is None:
         return EXIT_OK
     return args.return_if_none
