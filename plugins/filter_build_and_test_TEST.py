@@ -17,10 +17,70 @@
 
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 
 import filter_build_and_test
+
+
+# Keep the tests away from the user's git configuration (signing, hooks...)
+GIT_ENV = {
+    'GIT_CONFIG_GLOBAL': os.devnull,
+    'GIT_CONFIG_NOSYSTEM': '1',
+    'GIT_AUTHOR_NAME': 'filter-build-and-test',
+    'GIT_AUTHOR_EMAIL': 'filter-build-and-test@example.com',
+    'GIT_COMMITTER_NAME': 'filter-build-and-test',
+    'GIT_COMMITTER_EMAIL': 'filter-build-and-test@example.com',
+}
+_saved_env = {}
+
+
+def setUpModule():
+    for key, value in GIT_ENV.items():
+        _saved_env[key] = os.environ.get(key)
+        os.environ[key] = value
+
+
+def tearDownModule():
+    for key, value in _saved_env.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+
+
+def run_git(cwd, *args):
+    result = subprocess.run(
+        ['git', '-c', 'init.defaultBranch=main', '-c', 'commit.gpgsign=false',
+         '-C', cwd] + list(args),
+        capture_output=True, check=True)
+    return result.stdout.decode('utf-8').strip()
+
+
+class GitRepo:
+    """A throwaway repository; commit() returns the new commit SHA."""
+
+    def __init__(self, path):
+        self.path = path
+        os.makedirs(path)
+        run_git(path, 'init', '-q')
+
+    def write(self, relative_path, content='content\n'):
+        full_path = os.path.join(self.path, relative_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, 'w', encoding='utf-8') as written_file:
+            written_file.write(content)
+
+    def commit(self, message, files):
+        for relative_path, content in files.items():
+            self.write(relative_path, content)
+        run_git(self.path, 'add', '-A')
+        run_git(self.path, 'commit', '-q', '-m', message)
+        return run_git(self.path, 'rev-parse', 'HEAD')
+
+    def git(self, *args):
+        return run_git(self.path, *args)
 
 
 class TempDirTest(unittest.TestCase):
@@ -163,6 +223,41 @@ class TestShippedPatterns(unittest.TestCase):
                 self.assertEqual(
                     filter_build_and_test.is_ignorable(path, patterns),
                     ignorable)
+
+
+class TestChangeDetection(TempDirTest):
+
+    def test_none_includes_uncommitted_and_untracked_files(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        repo.commit('A', {'README.md': 'a\n', 'src/a.cc': 'a\n'})
+        repo.write('src/a.cc', 'changed\n')
+        repo.write('CONTRIBUTING.md', 'staged\n')
+        repo.git('add', 'CONTRIBUTING.md')
+        repo.write('docs/new.md', 'untracked\n')
+        repo.write('build/ignored.o', 'ignored\n')
+        repo.write('.gitignore', 'build/\n')
+        self.assertEqual(
+            sorted(filter_build_and_test.working_tree_changes(repo.path,
+                                                              'main')),
+            ['.gitignore', 'CONTRIBUTING.md', 'docs/new.md', 'src/a.cc'])
+
+    def test_a_rename_lists_both_paths(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        base = repo.commit('A', {'src/old.cc': 'same content\n' * 20})
+        repo.git('mv', 'src/old.cc', 'Migration.md')
+        head = repo.commit('B', {})
+        self.assertEqual(
+            sorted(filter_build_and_test.explicit_changes(repo.path, base,
+                                                          head)),
+            ['Migration.md', 'src/old.cc'])
+
+    def test_unusual_paths_are_returned_verbatim(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        base = repo.commit('A', {'README.md': 'a\n'})
+        head = repo.commit('B', {'docs/ñandú file.md': 'b\n'})
+        self.assertEqual(
+            filter_build_and_test.explicit_changes(repo.path, base, head),
+            ['docs/ñandú file.md'])
 
 
 if __name__ == '__main__':
