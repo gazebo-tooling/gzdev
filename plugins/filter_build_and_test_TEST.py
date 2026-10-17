@@ -535,6 +535,20 @@ class TestDecision(TempDirTest):
         run_main(self.args(self.code, '--junit-output', junit))
         self.assertFalse(os.path.exists(junit))
 
+    def test_gh_actions_annotation_and_step_summary(self):
+        summary = self.write_file('summary.md', '')
+        env = {'GITHUB_STEP_SUMMARY': summary}
+        code, out, err = run_main(self.args(self.docs, '--build-platform',
+                                            'gh-actions'), env)
+        self.assertEqual(code, 0)
+        self.assertEqual(out, '')
+        self.assertIn(
+            '\n::notice title=CI skipped::No build or tests needed', err)
+        with open(summary, encoding='utf-8') as summary_file:
+            content = summary_file.read()
+        self.assertIn('### CI skipped', content)
+        self.assertIn('- `README.md`', content)
+
     def test_a_file_name_cannot_start_a_log_line(self):
         self.repo.git('checkout', '-q', '-b', 'newline', self.base)
         head = self.repo.commit('newline', {
@@ -546,6 +560,30 @@ class TestDecision(TempDirTest):
         self.assertEqual(
             [line for line in err.splitlines()
              if not line.startswith('filter-build-and-test: ')], [])
+
+    def test_ignored_file_names_are_escaped_in_every_report(self):
+        name = 'x\n::warning::injected\rBUILD.bazel'
+        escaped = 'x\\x0a::warning::injected\\x0dBUILD.bazel'
+        self.repo.git('checkout', '-q', '-b', 'newline', self.base)
+        head = self.repo.commit('newline', {name: 'x\n'})
+        summary = self.write_file('summary.md', '')
+        junit = self.tmp_path('filter_build_and_test.xml')
+        code, _, err = run_main(
+            self.args(head, '--build-platform', 'gh-actions',
+                      '--return-if-none', '99', '--junit-output', junit),
+            {'GITHUB_STEP_SUMMARY': summary})
+        self.assertEqual(code, 99)
+        self.assertEqual([line for line in err.splitlines()
+                          if not line.startswith('filter-build-and-test: ')],
+                         ['::notice title=CI skipped::No build or tests'
+                          ' needed: all 1 changed files match the ignore'
+                          ' patterns'])
+        self.assertIn('filter-build-and-test:   ' + escaped + '\n', err)
+        with open(summary, encoding='utf-8') as summary_file:
+            self.assertIn('- `%s`\n' % escaped, summary_file.read())
+        skipped = ElementTree.parse(junit).getroot().find('testcase/skipped')
+        assert skipped is not None
+        self.assertEqual(skipped.text, escaped)
 
 
 class TestArguments(unittest.TestCase):

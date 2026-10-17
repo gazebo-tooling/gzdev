@@ -272,6 +272,21 @@ def write_junit(path, changed):
         junit_file.write(content)
 
 
+def report_gh_actions(changed, env):
+    """Annotate the run and add a section to the job summary."""
+    # Workflow commands must start at the beginning of the line
+    print('::notice title=CI skipped::' + no_build_message(changed),
+          file=sys.stderr)
+    summary_path = env.get('GITHUB_STEP_SUMMARY', '')
+    if not summary_path:
+        return
+    lines = ['### CI skipped', '', no_build_message(changed) + ':', '']
+    lines += ['- `%s`' % printable(path) for path in changed]
+    with open(summary_path, 'a', encoding='utf-8',
+              errors='backslashreplace') as summary_file:
+        summary_file.write('\n'.join(lines) + '\n')
+
+
 def log_paths(title, paths):
     log(title)
     for path in paths[:MAX_LISTED_FILES]:
@@ -302,6 +317,8 @@ def decide(args, env, patterns_file):
     log_paths(no_build_message(changed) + ':', changed)
     if args.junit_output:
         write_junit(args.junit_output, changed)
+    if args.build_platform == 'gh-actions':
+        report_gh_actions(changed, env)
     if args.return_if_none is None:
         return EXIT_OK
     return args.return_if_none
