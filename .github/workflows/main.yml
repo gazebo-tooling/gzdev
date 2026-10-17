@@ -30,7 +30,10 @@ jobs:
           flake8 . --count --ignore=D101,D102,D103,W503 --max-complexity=10 --max-line-length=127 --statistics
       - name: Test plugins _TEST.py
         run: |
-          python3 plugins/*_TEST.py
+          # unittest reads extra arguments as test names: one file per call
+          for test_file in plugins/*_TEST.py; do
+            python3 "${test_file}"
+          done
       - name: Smoke system tests for repository module
         run: |
           python3 gzdev.py repository list
