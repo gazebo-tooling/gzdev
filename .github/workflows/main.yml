@@ -84,4 +84,5 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Test filter-build-and-test with the standard library only
         run: |
+          python3 -S plugins/filter_build_and_test_TEST.py
           python3 -S gzdev.py filter-build-and-test --build-platform=none --base=HEAD~1

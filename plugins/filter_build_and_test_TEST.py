@@ -16,14 +16,19 @@
 """Unittests for filter_build_and_test.py."""
 
 from contextlib import redirect_stderr, redirect_stdout
+import importlib.util
 import io
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
 import filter_build_and_test
+
+GZDEV = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                     'gzdev.py')
 
 
 # Keep the tests away from the user's git configuration (signing, hooks...)
@@ -408,6 +413,29 @@ class TestArguments(unittest.TestCase):
                 code, out, _ = run_main(argv)
                 self.assertEqual(code, 2)
                 self.assertEqual(out, '')
+
+
+class TestGzdevEntryPoint(TempDirTest):
+
+    def test_filter_build_and_test_runs_without_site_packages(self):
+        repo = GitRepo(self.tmp_path('repo'))
+        base = repo.commit('A', {'README.md': 'a\n'})
+        head = repo.commit('B', {'README.md': 'b\n'})
+        # -S: no site-packages, so docopt and yaml cannot be imported
+        result = subprocess.run(
+            [sys.executable, '-S', GZDEV, 'filter-build-and-test',
+             '--repo-path', repo.path, '--base', base, '--head', head,
+             '--return-if-none', '42'],
+            capture_output=True)
+        self.assertEqual(result.returncode, 42, result.stderr)
+        self.assertEqual(result.stdout, b'')
+
+    @unittest.skipUnless(importlib.util.find_spec('docopt'),
+                         'docopt is not installed')
+    def test_unknown_command_exits_1(self):
+        result = subprocess.run([sys.executable, GZDEV, 'no-such-command'],
+                                capture_output=True)
+        self.assertEqual(result.returncode, 1)
 
 
 if __name__ == '__main__':
