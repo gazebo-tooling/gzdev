@@ -42,6 +42,7 @@ without gzdev's requirements installed.
 
 import os
 import re
+import subprocess
 
 PLATFORMS = ('none',)
 BUILD_SYSTEMS = ('cmake', 'bazel')
@@ -111,3 +112,51 @@ def active_patterns(sections, build_platform, build_system):
 
 def is_ignorable(path, patterns):
     return any(pattern.search(path) for pattern in patterns)
+
+
+# --- change set ------------------------------------------------------------
+
+def git(repo_path, *args):
+    """Run git in repo_path and return its stdout."""
+    cmd = ['git', '-C', repo_path] + list(args)
+    try:
+        result = subprocess.run(cmd, capture_output=True)
+    except OSError as ex:
+        raise FilterBuildAndTestError('cannot run git: %s' % ex)
+    if result.returncode != 0:
+        raise FilterBuildAndTestError("'%s' failed: %s" % (
+            ' '.join(cmd), result.stderr.decode('utf-8', 'replace').strip()))
+    return result.stdout.decode('utf-8', 'surrogateescape')
+
+
+def split_nul(output):
+    return [path for path in output.split('\0') if path]
+
+
+def diff_paths(repo_path, *revisions):
+    """Paths changed between revisions; one revision means the working tree."""
+    return split_nul(git(repo_path, 'diff', '--name-only', '--no-renames',
+                         '-z', *revisions))
+
+
+def merge_base(repo_path, first, second):
+    return git(repo_path, 'merge-base', first, second).strip()
+
+
+def working_tree_changes(repo_path, base):
+    """Changes since the merge-base, uncommitted and untracked included."""
+    paths = diff_paths(repo_path, merge_base(repo_path, base, 'HEAD'))
+    untracked = split_nul(git(repo_path, 'ls-files', '--others',
+                              '--exclude-standard', '-z'))
+    return paths + [path for path in untracked if path not in paths]
+
+
+def explicit_changes(repo_path, base, head):
+    if head:
+        return diff_paths(repo_path, merge_base(repo_path, base, head), head)
+    return working_tree_changes(repo_path, base)
+
+
+def changed_files(args):
+    """Return the changed paths."""
+    return explicit_changes(args.repo_path, args.base, args.head)
