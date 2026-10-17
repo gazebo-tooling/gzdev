@@ -21,7 +21,7 @@ Commands/Plugins:
 """
 
 from importlib import import_module
-from sys import stderr
+import sys
 
 from docopt import docopt
 
@@ -35,4 +35,5 @@ if __name__ == '__main__':
         plugin = import_module('plugins.' + cmd)
         plugin.main()
     else:
-        print('\nERROR: `%s` is not a valid gzdev plugin.\n' % cmd, file=stderr)
+        print('\nERROR: `%s` is not a valid gzdev plugin.\n' % cmd, file=sys.stderr)
+        sys.exit(1)
