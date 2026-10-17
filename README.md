@@ -53,7 +53,7 @@ It needs only `git` and Python 3.8 or newer: gzdev's `requirements.txt` does not
 have to be installed.
 
 ```
-gzdev filter-build-and-test [--build-platform=(none|jenkins)]
+gzdev filter-build-and-test [--build-platform=(none|gh-actions|jenkins)]
                             [--build-system=(cmake|bazel)]
                             [--return-if-none=N]
                             [--base=REF] [--head=REF]
@@ -63,8 +63,9 @@ gzdev filter-build-and-test [--build-platform=(none|jenkins)]
 
 * `--build-platform` (default `none`): where the command runs. It selects how
   the changed files are found and which patterns apply. `jenkins` reads the
-  `ghprb*` variables of a pull request build; outside a pull request it asks
-  for a full build. `none` needs `--base`.
+  `ghprb*` variables of a pull request build and `gh-actions` reads the pull
+  request event; outside a pull request both ask for a full build. `none` needs
+  `--base`.
 * `--build-system` (default `cmake`): selects the patterns of that build system.
 * `--return-if-none=N`: exit code (3 to 125) when no build or tests are needed.
 * `--base`, `--head`: compare `--head` (default `HEAD`) with its merge base

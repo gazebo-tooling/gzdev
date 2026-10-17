@@ -37,6 +37,8 @@ CMakeLists\.txt$
 [build-platform:jenkins]
 ^\.github/workflows/
 
+[build-platform:gh-actions]
+
 # Local builds do not use anything in .github nor report coverage
 [build-platform:none]
 ^\.github/

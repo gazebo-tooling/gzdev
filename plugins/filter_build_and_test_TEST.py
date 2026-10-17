@@ -18,6 +18,7 @@
 from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -223,6 +224,11 @@ class TestShippedPatterns(unittest.TestCase):
         ('.github/workflows/ci.yml', 'jenkins', 'cmake', True),
         ('.github/ci/packages.apt', 'jenkins', 'cmake', False),
         ('codecov.yml', 'jenkins', 'cmake', False),
+        # [build-platform:gh-actions]
+        ('README.md', 'gh-actions', 'bazel', True),
+        ('src/BUILD.bazel', 'gh-actions', 'cmake', True),
+        ('.github/workflows/ci.yml', 'gh-actions', 'cmake', False),
+        ('codecov.yml', 'gh-actions', 'cmake', False),
         # [build-platform:none]
         ('.github/workflows/ci.yml', 'none', 'cmake', True),
         ('.github/ci/packages.apt', 'none', 'cmake', True),
@@ -266,6 +272,20 @@ class TestChangeDetection(TempDirTest):
         commits['B'] = origin.commit('B', {'src/b.cc': 'b\n'})
         return origin, commits
 
+    def make_pr_merge_clone(self):
+        """Shallow clone of a test-merge commit, as actions/checkout does."""
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', '-b', 'pr-merge', 'main')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge', 'feature')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', '--depth=1', '--branch', 'pr-merge',
+                'file://' + origin.path, clone)
+        return clone, commits
+
+    def event_file(self, base_sha):
+        return self.write_file('event.json', json.dumps(
+            {'pull_request': {'base': {'sha': base_sha}}}))
+
     def test_jenkins_diffs_from_the_merge_base(self):
         origin, commits = self.make_origin()
         clone = self.tmp_path('clone')
@@ -307,6 +327,53 @@ class TestChangeDetection(TempDirTest):
                 filter_build_and_test.FilterBuildAndTestError,
                 'not a commit SHA'):
             filter_build_and_test.jenkins_changes(self.tmp, env)
+
+    def test_gh_actions_fetches_the_base_into_a_shallow_clone(self):
+        clone, commits = self.make_pr_merge_clone()
+        self.assertFalse(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+        env = {'GITHUB_EVENT_NAME': 'pull_request',
+               'GITHUB_EVENT_PATH': self.event_file(commits['B'])}
+        self.assertEqual(filter_build_and_test.gh_actions_changes(clone, env),
+                         ['README.md'])
+        self.assertTrue(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+
+    def test_gh_actions_full_history_checkout(self):
+        origin, commits = self.make_origin()
+        origin.git('checkout', '-q', '-b', 'pr-merge', 'main')
+        origin.git('merge', '-q', '--no-ff', '-m', 'merge', 'feature')
+        clone = self.tmp_path('clone')
+        run_git(self.tmp, 'clone', '-q', '--branch', 'pr-merge',
+                origin.path, clone)
+        self.assertTrue(
+            filter_build_and_test.commit_exists(clone, commits['B']))
+        env = {'GITHUB_EVENT_NAME': 'pull_request',
+               'GITHUB_EVENT_PATH': self.event_file(commits['B'])}
+        self.assertEqual(filter_build_and_test.gh_actions_changes(clone, env),
+                         ['README.md'])
+
+    def test_gh_actions_stale_base_only_adds_files(self):
+        clone, commits = self.make_pr_merge_clone()
+        env = {'GITHUB_EVENT_NAME': 'pull_request_target',
+               'GITHUB_EVENT_PATH': self.event_file(commits['A'])}
+        changes = filter_build_and_test.gh_actions_changes(clone, env)
+        assert changes is not None
+        self.assertEqual(sorted(changes), ['README.md', 'src/b.cc'])
+
+    def test_gh_actions_outside_a_pull_request(self):
+        self.assertIsNone(filter_build_and_test.gh_actions_changes(
+            self.tmp, {'GITHUB_EVENT_NAME': 'push'}))
+
+    def test_gh_actions_unreadable_event_is_an_error(self):
+        bad_event = self.write_file('bad.json', '{"pull_request": {}}')
+        for path in ('', self.tmp_path('missing.json'), bad_event):
+            with self.subTest(path=path):
+                env = {'GITHUB_EVENT_NAME': 'pull_request',
+                       'GITHUB_EVENT_PATH': path}
+                with self.assertRaises(
+                        filter_build_and_test.FilterBuildAndTestError):
+                    filter_build_and_test.gh_actions_changes(self.tmp, env)
 
     def test_none_includes_uncommitted_and_untracked_files(self):
         repo = GitRepo(self.tmp_path('repo'))
