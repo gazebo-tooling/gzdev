@@ -58,6 +58,7 @@ gzdev filter-build-and-test [--build-platform=(none|jenkins)]
                             [--return-if-none=N]
                             [--base=REF] [--head=REF]
                             [--repo-path=DIR]
+                            [--junit-output=FILE]
 ```
 
 * `--build-platform` (default `none`): where the command runs. It selects how
@@ -71,6 +72,8 @@ gzdev filter-build-and-test [--build-platform=(none|jenkins)]
   `--build-platform=none` and no `--head`, uncommitted and untracked files
   count too.
 * `--repo-path` (default `.`): the repository to check.
+* `--junit-output`: when no build or tests are needed, write a JUnit report
+  there with one skipped test case.
 
 Exit codes: `0` the command ran and the change needs a build and tests, `N`
 the change needs neither, `1` the command could not decide, `2` invalid

@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ElementTree
 
 import filter_build_and_test
 
@@ -444,6 +445,29 @@ class TestDecision(TempDirTest):
         self.assertIn('25 of 25 changed files need a build and tests:', err)
         self.assertIn('... and 5 more', err)
 
+    def test_junit_report_when_no_build_is_needed(self):
+        junit = self.tmp_path('build', 'test_results',
+                              'filter_build_and_test.xml')
+        run_main(self.args(self.docs, '--junit-output', junit))
+        suite = ElementTree.parse(junit).getroot()
+        self.assertEqual(suite.tag, 'testsuite')
+        self.assertEqual(suite.get('skipped'), '1')
+        cases = suite.findall('testcase')
+        self.assertEqual([case.get('name') for case in cases],
+                         ['no_build_needed'])
+        skipped = cases[0].find('skipped')
+        self.assertIsNotNone(skipped)
+        assert skipped is not None
+        self.assertTrue(skipped.get('message', '').startswith(
+            'No build or tests needed'))
+        self.assertEqual(skipped.text, 'README.md')
+
+    def test_no_junit_report_when_a_build_is_needed(self):
+        junit = self.tmp_path('build', 'test_results',
+                              'filter_build_and_test.xml')
+        run_main(self.args(self.code, '--junit-output', junit))
+        self.assertFalse(os.path.exists(junit))
+
     def test_a_file_name_cannot_start_a_log_line(self):
         self.repo.git('checkout', '-q', '-b', 'newline', self.base)
         head = self.repo.commit('newline', {
@@ -465,6 +489,7 @@ class TestArguments(unittest.TestCase):
         self.assertEqual(args.build_system, 'cmake')
         self.assertEqual(args.repo_path, '.')
         self.assertIsNone(args.return_if_none)
+        self.assertIsNone(args.junit_output)
 
     def test_return_if_none_range(self):
         for value in ('3', '125'):

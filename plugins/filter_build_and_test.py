@@ -22,6 +22,7 @@ Usage:
                 [--return-if-none=N]
                 [--base=REF] [--head=REF]
                 [--repo-path=DIR]
+                [--junit-output=FILE]
 
 For now the answer is either "no build needed" or "build and run all tests":
 a change needs neither a build nor tests when every file it touches matches the
@@ -45,6 +46,7 @@ import os
 import re
 import subprocess
 import sys
+from xml.sax.saxutils import escape, quoteattr
 
 PLATFORMS = ('none', 'jenkins')
 BUILD_SYSTEMS = ('cmake', 'bazel')
@@ -213,6 +215,26 @@ def no_build_message(changed):
             ' patterns' % len(changed))
 
 
+def write_junit(path, changed):
+    """Write a JUnit report with one skipped test case explaining the skip."""
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    message = no_build_message(changed)
+    details = '\n'.join(printable(path) for path in changed)
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<testsuite name="filter-build-and-test" tests="1" failures="0"'
+        ' errors="0" skipped="1">\n'
+        '  <testcase classname="filter-build-and-test"'
+        ' name="no_build_needed">\n'
+        '    <skipped message=%s>%s</skipped>\n'
+        '  </testcase>\n'
+        '</testsuite>\n') % (quoteattr(message), escape(details))
+    with open(path, 'w', encoding='utf-8',
+              errors='backslashreplace') as junit_file:
+        junit_file.write(content)
+
+
 def log_paths(title, paths):
     log(title)
     for path in paths[:MAX_LISTED_FILES]:
@@ -241,6 +263,8 @@ def decide(args, env, patterns_file):
                   % (len(needs_build), len(changed)), needs_build)
         return EXIT_OK
     log_paths(no_build_message(changed) + ':', changed)
+    if args.junit_output:
+        write_junit(args.junit_output, changed)
     if args.return_if_none is None:
         return EXIT_OK
     return args.return_if_none
@@ -280,6 +304,9 @@ def build_parser():
     parser.add_argument('--base', type=git_ref, metavar='REF')
     parser.add_argument('--head', type=git_ref, metavar='REF')
     parser.add_argument('--repo-path', default='.', metavar='DIR')
+    parser.add_argument('--junit-output', metavar='FILE',
+                        help='JUnit report to write when no build or tests'
+                        ' are needed')
     return parser
 
 
